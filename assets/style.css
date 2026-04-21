@@ -188,6 +188,14 @@ tbody tr:hover {
     box-shadow: 0 12px 24px rgba(11, 107, 75, 0.25);
 }
 
+.btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+    border-color: var(--border);
+}
+
 .page-footer {
     margin-top: 6px;
     font-size: 12px;

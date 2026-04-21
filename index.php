@@ -13,7 +13,7 @@ $teamMap = [];
 
 try {
     $seasons = supabase_get('seasons', [
-        'select' => 'id,name,year',
+        'select' => 'id,name,year,roster_change_end',
         'is_active' => 'eq.true',
         'order' => 'year.desc',
         'limit' => 1,
@@ -99,6 +99,48 @@ if ($filterHomeId !== '' || $filterMatchday !== '') {
         $dayOk = $filterMatchday === '' || (string) ($match['matchday'] ?? '') === (string) $filterMatchday;
         return $homeOk && $dayOk;
     }));
+}
+
+// Calculate roster deadline for return round matches
+$halfwayMatchday = 0;
+$rosterDeadlineActive = false;
+
+if (!empty($matchdays)) {
+    $maxMatchday = max($matchdays);
+    $halfwayMatchday = intval($maxMatchday / 2);
+}
+
+if ($season && isset($season['roster_change_end']) && !empty($allMatches)) {
+    try {
+        $rosterChangeEnd = new DateTime($season['roster_change_end']);
+        $rosterChangeEnd->setTimezone(new DateTimeZone(date_default_timezone_get()));
+        
+        // Find first match date to validate if this is pre-season or mid-season deadline
+        $firstMatchDate = null;
+        foreach ($allMatches as $match) {
+            if (isset($match['match_date'])) {
+                $matchDate = new DateTime($match['match_date']);
+                $matchDate->setTimezone(new DateTimeZone(date_default_timezone_get()));
+                if ($firstMatchDate === null || $matchDate < $firstMatchDate) {
+                    $firstMatchDate = $matchDate;
+                }
+            }
+        }
+        
+        if ($firstMatchDate) {
+            if ($rosterChangeEnd <= $firstMatchDate) {
+                // Pre-season value (not updated yet) - keep buttons disabled
+                $rosterDeadlineActive = true;
+            } else {
+                // Mid-season value - check if deadline has passed
+                $now = new DateTime();
+                $now->setTimezone(new DateTimeZone(date_default_timezone_get()));
+                $rosterDeadlineActive = $now < $rosterChangeEnd;
+            }
+        }
+    } catch (Throwable $e) {
+        // Silently ignore invalid roster_change_end dates
+    }
 }
 
 
@@ -255,6 +297,12 @@ $seasonName = $season['name'] ?? 'Aktive Saison';
                                     $homeShort = team_short_name($teamMap, $match['home_team_id'] ?? null);
                                     $awayShort = team_short_name($teamMap, $match['away_team_id'] ?? null);
                                     $venue = $match['venue'] ?? '-';
+                                    
+                                    // Check if this is a return round match and roster deadline is active
+                                    $isReturnRound = is_numeric($matchday) && (int) $matchday > $halfwayMatchday;
+                                    $disableButton = $isReturnRound && $rosterDeadlineActive;
+                                    $disabledAttr = $disableButton ? 'disabled' : '';
+                                    $titleAttr = $disableButton ? 'title="Spielbericht-Vorlage gesperrt: Nachnominierungen offen"' : '';
                                 ?>
                                 <tr>
                                     <td><?php echo h((string) $matchday); ?></td>
@@ -270,7 +318,7 @@ $seasonName = $season['name'] ?? 'Aktive Saison';
                                         <span class="team-short"><?php echo h($awayShort); ?></span>
                                     </td>
                                     <td>
-                                        <button class="btn" type="button" data-generate data-match-id="<?php echo h($match['id']); ?>">
+                                        <button class="btn" type="button" data-generate data-match-id="<?php echo h($match['id']); ?>" <?php echo $disabledAttr; ?> <?php echo $titleAttr; ?>>
                                             <span class="btn-full">Spielbericht-Vorlage erstellen</span>
                                             <span class="btn-short">PDF</span>
                                         </button>
