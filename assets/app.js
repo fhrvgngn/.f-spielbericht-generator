@@ -155,8 +155,8 @@
         doc.rect(leftX, signatureTop, tableWidth, signatureHeight);
         doc.rect(rightX, signatureTop, tableWidth, signatureHeight);
         doc.setFontSize(6);
-        doc.text('Unterschrift Spielfuehrer HEIM', leftX + 2, signatureTop + 10);
-        doc.text('Unterschrift Spielfuehrer GAST', rightX + 2, signatureTop + 10);
+        doc.text('Unterschrift Spielführer HEIM', leftX + 2, signatureTop + 10);
+        doc.text('Unterschrift Spielführer GAST', rightX + 2, signatureTop + 10);
 
         doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
