@@ -64,12 +64,33 @@
         });
 
         const rows = 30;
-        const homePlayers = Array.isArray(data.players?.home) ? data.players.home : [];
-        const awayPlayers = Array.isArray(data.players?.away) ? data.players.away : [];
+        const homePlayers = sortPlayers(Array.isArray(data.players?.home) ? data.players.home : []);
+        const awayPlayers = sortPlayers(Array.isArray(data.players?.away) ? data.players.away : []);
 
         renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows);
 
         return doc;
+    }
+
+    function sortPlayers(players) {
+        return [...players].sort((a, b) => {
+            const aHasNumber = a.jersey_number != null && a.jersey_number !== '';
+            const bHasNumber = b.jersey_number != null && b.jersey_number !== '';
+            
+            // Both have numbers - sort numerically
+            if (aHasNumber && bHasNumber) {
+                return Number(a.jersey_number) - Number(b.jersey_number);
+            }
+            
+            // One has number, one doesn't - number comes first
+            if (aHasNumber && !bHasNumber) return -1;
+            if (!aHasNumber && bHasNumber) return 1;
+            
+            // Neither has number - sort by last name alphabetically
+            const aName = (a.last_name || '').toLowerCase();
+            const bName = (b.last_name || '').toLowerCase();
+            return aName.localeCompare(bName);
+        });
     }
 
     function buildFilename(data) {
