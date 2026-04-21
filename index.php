@@ -223,7 +223,7 @@ $seasonName = $season['name'] ?? 'Aktive Saison';
 <body data-season-name="<?php echo h($seasonName); ?>">
     <main class="page">
         <header class="hero">
-            <h1>Spielbericht Generator</h1>
+            <h1>Spielbericht <span class="hero-accent">Generator</span></h1>
             <p>Hobbyliga Vorderland - <?php echo h($seasonName); ?></p>
         </header>
 

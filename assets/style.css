@@ -2,13 +2,14 @@
 
 :root {
     color-scheme: light;
-    --bg: #f3f2ee;
+    --bg: #f5f5f5;
     --panel: #ffffff;
     --ink: #1b1b1b;
-    --muted: #5e5e5e;
-    --accent: #0b6b4b;
-    --accent-2: #0e8d5e;
-    --border: #e4e1d9;
+    --muted: #6b7280;
+    --accent: #b91c1c;
+    --accent-2: #dc2626;
+    --border: #e5e7eb;
+    --hero-bg: #f9e8e8;
 }
 
 * {
@@ -19,7 +20,7 @@ body {
     margin: 0;
     font-family: "IBM Plex Sans", "Trebuchet MS", "Segoe UI", sans-serif;
     color: var(--ink);
-    background: radial-gradient(circle at top, #ffffff 0%, #f3f2ee 50%, #ece9e2 100%);
+    background: var(--bg);
 }
 
 .page {
@@ -31,36 +32,42 @@ body {
 .hero {
     padding: 28px 32px;
     border-radius: 24px;
-    background: linear-gradient(135deg, #0b6b4b, #1f9a6e);
-    color: #ffffff;
-    box-shadow: 0 18px 35px rgba(14, 77, 56, 0.25);
+    background: var(--hero-bg);
+    color: var(--ink);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     margin-bottom: 24px;
+    border: 1px solid #f8b4b4;
 }
 
 .hero h1 {
     margin: 0 0 8px;
     font-size: 32px;
     letter-spacing: 0.5px;
+    font-weight: 700;
 }
 
 .hero p {
     margin: 0;
     font-size: 16px;
-    opacity: 0.9;
+    color: var(--muted);
+}
+
+.hero-accent {
+    color: var(--accent);
 }
 
 .panel {
     background: var(--panel);
-    border-radius: 18px;
+    border-radius: 16px;
     padding: 20px 24px;
-    box-shadow: 0 10px 25px rgba(17, 24, 39, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     margin-bottom: 18px;
     border: 1px solid var(--border);
 }
 
 .panel.error {
-    border-color: #e07c7c;
-    background: #fff4f4;
+    border-color: #fca5a5;
+    background: #fef2f2;
 }
 
 .filter {
@@ -80,7 +87,7 @@ label {
 
 select {
     padding: 10px 12px;
-    border-radius: 10px;
+    border-radius: 8px;
     border: 1px solid var(--border);
     font-size: 15px;
     min-width: 240px;
@@ -104,7 +111,7 @@ select {
     background: #ffffff;
     color: var(--ink);
     padding: 8px 12px;
-    border-radius: 999px;
+    border-radius: 8px;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
@@ -113,15 +120,15 @@ select {
 
 .matchday-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 16px rgba(11, 107, 75, 0.15);
-    border-color: rgba(11, 107, 75, 0.35);
+    box-shadow: 0 4px 12px rgba(185, 28, 28, 0.15);
+    border-color: rgba(185, 28, 28, 0.35);
 }
 
 .matchday-btn.is-active {
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
     color: #ffffff;
     border-color: transparent;
-    box-shadow: 0 8px 18px rgba(11, 107, 75, 0.2);
+    box-shadow: 0 4px 12px rgba(185, 28, 28, 0.2);
 }
 
 .matchday-btn:disabled {
@@ -159,7 +166,7 @@ tbody td {
 }
 
 tbody tr:hover {
-    background: #f7f6f3;
+    background: #f9fafb;
 }
 
 .empty {
@@ -171,7 +178,7 @@ tbody tr:hover {
 .btn {
     display: inline-block;
     padding: 10px 16px;
-    border-radius: 999px;
+    border-radius: 8px;
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
     color: #ffffff;
     text-decoration: none;
@@ -180,12 +187,12 @@ tbody tr:hover {
     border: none;
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 8px 18px rgba(11, 107, 75, 0.2);
+    box-shadow: 0 2px 8px rgba(185, 28, 28, 0.2);
 }
 
 .btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 12px 24px rgba(11, 107, 75, 0.25);
+    box-shadow: 0 4px 16px rgba(185, 28, 28, 0.3);
 }
 
 .btn:disabled {
