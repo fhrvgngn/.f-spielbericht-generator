@@ -101,9 +101,10 @@ if ($filterHomeId !== '' || $filterMatchday !== '') {
     }));
 }
 
-// Calculate roster deadline for return round matches
+// Calculate roster deadline for matches
 $halfwayMatchday = 0;
 $rosterDeadlineActive = false;
+$isPreSeasonDeadline = false;
 
 if (!empty($matchdays)) {
     $maxMatchday = max($matchdays);
@@ -128,13 +129,16 @@ if ($season && isset($season['roster_change_end']) && !empty($allMatches)) {
         }
         
         if ($firstMatchDate) {
+            $now = new DateTime();
+            $now->setTimezone(new DateTimeZone(date_default_timezone_get()));
+            
             if ($rosterChangeEnd <= $firstMatchDate) {
-                // Pre-season value (not updated yet) - keep buttons disabled
-                $rosterDeadlineActive = true;
+                // Pre-season deadline - affects all matches
+                $isPreSeasonDeadline = true;
+                $rosterDeadlineActive = $now < $rosterChangeEnd;
             } else {
-                // Mid-season value - check if deadline has passed
-                $now = new DateTime();
-                $now->setTimezone(new DateTimeZone(date_default_timezone_get()));
+                // Mid-season deadline - affects only return round matches
+                $isPreSeasonDeadline = false;
                 $rosterDeadlineActive = $now < $rosterChangeEnd;
             }
         }
@@ -298,9 +302,15 @@ $seasonName = $season['name'] ?? 'Aktive Saison';
                                     $awayShort = team_short_name($teamMap, $match['away_team_id'] ?? null);
                                     $venue = $match['venue'] ?? '-';
                                     
-                                    // Check if this is a return round match and roster deadline is active
-                                    $isReturnRound = is_numeric($matchday) && (int) $matchday > $halfwayMatchday;
-                                    $disableButton = $isReturnRound && $rosterDeadlineActive;
+                                    // Check if button should be disabled based on roster deadline
+                                    if ($isPreSeasonDeadline) {
+                                        // Pre-season: disable all matches
+                                        $disableButton = $rosterDeadlineActive;
+                                    } else {
+                                        // Mid-season: disable only return round matches
+                                        $isReturnRound = is_numeric($matchday) && (int) $matchday > $halfwayMatchday;
+                                        $disableButton = $isReturnRound && $rosterDeadlineActive;
+                                    }
                                     $disabledAttr = $disableButton ? 'disabled' : '';
                                     $titleAttr = $disableButton ? 'title="Spielbericht-Vorlage gesperrt: Nachnominierungen offen"' : '';
                                 ?>
