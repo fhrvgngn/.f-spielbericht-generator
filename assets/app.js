@@ -60,6 +60,7 @@
         doc.setProperties({
             title: `Spielbericht Hobbyliga ${seasonLabel}`,
             author: '.fahrvergnuegen',
+            creator: 'Spielbericht Generator',
         });
 
         const rows = 30;
