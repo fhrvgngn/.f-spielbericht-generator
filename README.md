@@ -1,6 +1,6 @@
 # Spielbericht Generator
 
-Client-seitiger PDF-Generator fuer die Hobbyliga Vorderland. Die Seite laedt Spiele, filtert nach Heimteam und Spieltag, und erzeugt pro Spiel eine PDF-Spielberichtvorlage im Browser.
+Client-seitiger PDF-Generator für die Hobbyliga Vorderland. Die Seite lädt Spiele, filtert nach Heimteam und Spieltag, und erzeugt pro Spiel eine PDF-Spielberichtvorlage im Browser.
 
 ## Stack
 
@@ -34,7 +34,7 @@ Client-seitiger PDF-Generator fuer die Hobbyliga Vorderland. Die Seite laedt Spi
 ## Konfiguration
 
 Die Supabase URL und der Bearer Token sind in config.php hinterlegt. Der Token ist server-seitig und wird nicht an den Browser ausgegeben.
-Der verwendete Bearer Token ist der aktuell aktive Public Token.
+Der verwendete Bearer Token ist der aktuell aktive Public Token. (April 2026)
 
 ## Projektstruktur
 
@@ -46,11 +46,6 @@ Der verwendete Bearer Token ist der aktuell aktive Public Token.
 
 ## Hinweise
 
-- Fuer Produktion muss SSL-Verify aktiv sein (cURL).
-   - Stelle sicher, dass in lib/supabase.php keine Optionen gesetzt sind, die SSL deaktivieren. (CURLOPT_SSL_VERIFYPEER => false, CURLOPT_SSL_VERIFYHOST => 0,)
-   - Hinterlege einen gueltigen CA-Bundle Pfad in php.ini, z.B.:
-      curl.cainfo="C:\\PHP\\extras\\ssl\\cacert.pem"
-      openssl.cafile="C:\\PHP\\extras\\ssl\\cacert.pem"
-   - PHP/Webserver danach neu starten.
 - Wenn sich Kader aendern, werden PDF-Listen immer live aus der aktuellen API erzeugt.
+- Richtigkeit der Angaben hängen von den Daten auf hobbyliga-vorderland.at ab.
 
