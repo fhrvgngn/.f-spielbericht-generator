@@ -13,8 +13,9 @@ $teamMap = [];
 
 try {
     $seasons = supabase_get('seasons', [
-        'select' => 'id,name',
+        'select' => 'id,name,year',
         'is_active' => 'eq.true',
+        'order' => 'year.desc',
         'limit' => 1,
     ]);
     $season = $seasons[0] ?? null;
