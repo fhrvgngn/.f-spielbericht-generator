@@ -57,6 +57,11 @@
             orientation: 'portrait',
         });
 
+        doc.setProperties({
+            title: `Spielbericht Hobbyliga ${seasonLabel}`,
+            author: '.fahrvergnuegen',
+        });
+
         const rows = 30;
         const homePlayers = Array.isArray(data.players?.home) ? data.players.home : [];
         const awayPlayers = Array.isArray(data.players?.away) ? data.players.away : [];
