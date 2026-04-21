@@ -39,6 +39,25 @@ Die Supabase URL und der Bearer Token sind in config.php hinterlegt. Der Token i
 
 - Richtigkeit der Angaben hängen von den Daten auf hobbyliga-vorderland.at ab.
 
+### Temporärer Fix: FC Viktorsberg Namens-Swap (2026)
+
+**Problem:** FC Viktorsberg (Team-ID: `5ed2c34b-e1cf-4427-9e7a-fcf2712cd1f8`) hat in der Saison 2026 (Season-ID: `66a1a2a5-0eac-485d-ac0c-03e0555a46f7`) die Felder `first_name` und `last_name` vertauscht.
+
+**Lösung:** Die Datei `assets/season-2026-fixes.js` korrigiert diese Vertauschung automatisch beim Generieren der PDFs.
+
+**Entfernung nach Saison 2026:**
+1. Datei `assets/season-2026-fixes.js` löschen
+2. Import in `assets/app.js` (Zeile 1) entfernen: `import { applySeasonFixes } from './season-2026-fixes.js';`
+3. In `assets/app.js` in der Funktion `buildPdf()` die Zeilen mit `applySeasonFixes()` entfernen und zu ursprünglichem Code zurückkehren:
+   ```javascript
+   // Alt (mit Fix):
+   const homePlayersFixed = applySeasonFixes(homePlayersRaw, data.teams?.home?.id || '', seasonId);
+   const homePlayers = sortPlayers(homePlayersFixed);
+   
+   // Neu (ohne Fix):
+   const homePlayers = sortPlayers(homePlayersRaw);
+   ```
+
 ## Live-Server
 
    https://tschuta.at/tools/sbg/
