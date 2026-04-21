@@ -269,7 +269,7 @@ $seasonName = $season['name'] ?? 'Aktive Saison';
             <p>Hinweis: Der erzeugte PDF-Inhalt hängt von der Richtigkeit der Daten auf hobbyliga-vorderland.at ab.</p>
             <p>
                 <a href="https://github.com/fhrvgngn/.f-spielbericht-generator" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 0.25em; text-decoration: none; color: inherit;">
-                    <img src="assets/octocat.svg" alt="GitHub" style="height: 1em; width: auto; vertical-align: middle;">
+                    <img src="assets/octocat.svg" alt="GitHub" style="height: 1.6em; width: auto; vertical-align: middle;">
                     GitHub Repository
                 </a>
             </p>
