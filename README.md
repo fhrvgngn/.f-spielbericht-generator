@@ -25,7 +25,7 @@ Client-seitiger PDF-Generator für die Hobbyliga Vorderland. Die Seite lädt Spi
 
 ## Konfiguration
 
-Die Supabase URL und der Bearer Token sind in config.php hinterlegt. Der Token ist server-seitig und wird nicht an den Browser ausgegeben. Der verwendete Bearer Token ist der aktuell aktive Public Token. (April 2026)
+Die Supabase URL und der Bearer Token sind in config.php hinterlegt. Der Token ist server-seitig und wird nicht an den Browser ausgegeben. Der verwendete Bearer Token ist der aktuell aktive anon Token von supabase. (April 2026)
 
 ## Projektstruktur
 
