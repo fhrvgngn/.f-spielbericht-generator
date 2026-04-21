@@ -270,7 +270,7 @@
             if (player.is_vlv_player) {
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(4);
-                doc.text('VLV', x + numWidth + nameWidth - 1, rowBottom - 0.8, { align: 'right' });
+                doc.text('VFV', x + numWidth + nameWidth - 1, rowBottom - 0.8, { align: 'right' });
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(8);
             }
