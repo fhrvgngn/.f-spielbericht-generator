@@ -20,24 +20,40 @@ try {
     ]);
     $season = $seasons[0] ?? null;
 
-    $teams = supabase_get('teams', [
-        'order' => 'name.asc',
-    ]);
-
-    foreach ($teams as $team) {
-        if (isset($team['id'], $team['name'])) {
-            $teamMap[$team['id']] = [
-                'name' => $team['name'],
-                'short_name' => $team['short_name'] ?? '',
-            ];
-        }
-    }
-
     if ($season && isset($season['id'])) {
         $matches = supabase_get('matches', [
             'season_id' => 'eq.' . $season['id'],
             'order' => 'matchday.asc,match_date.asc',
         ]);
+
+        // Extract unique team IDs from matches
+        $teamIds = [];
+        foreach ($matches as $match) {
+            if (isset($match['home_team_id'])) {
+                $teamIds[$match['home_team_id']] = true;
+            }
+            if (isset($match['away_team_id'])) {
+                $teamIds[$match['away_team_id']] = true;
+            }
+        }
+
+        // Fetch only teams that have matches in this season
+        if (!empty($teamIds)) {
+            $teamIdList = implode(',', array_keys($teamIds));
+            $teams = supabase_get('teams', [
+                'id' => 'in.(' . $teamIdList . ')',
+                'order' => 'name.asc',
+            ]);
+
+            foreach ($teams as $team) {
+                if (isset($team['id'], $team['name'])) {
+                    $teamMap[$team['id']] = [
+                        'name' => $team['name'],
+                        'short_name' => $team['short_name'] ?? '',
+                    ];
+                }
+            }
+        }
     }
 } catch (Throwable $e) {
     $errors[] = $e->getMessage();
