@@ -133,11 +133,18 @@ if ($season && isset($season['roster_change_end']) && !empty($allMatches)) {
             $now->setTimezone(new DateTimeZone(date_default_timezone_get()));
             
             if ($rosterChangeEnd <= $firstMatchDate) {
-                // Pre-season deadline - affects all matches
-                $isPreSeasonDeadline = true;
-                $rosterDeadlineActive = $now < $rosterChangeEnd;
+                // Pre-season roster_change_end (not yet updated to mid-season)
+                if ($now < $rosterChangeEnd) {
+                    // Before pre-season deadline: disable all matches
+                    $isPreSeasonDeadline = true;
+                    $rosterDeadlineActive = true;
+                } else {
+                    // After pre-season deadline: disable only return round (waiting for mid-season update)
+                    $isPreSeasonDeadline = false;
+                    $rosterDeadlineActive = true; // Keep return round disabled
+                }
             } else {
-                // Mid-season deadline - affects only return round matches
+                // Mid-season roster_change_end (admin has updated it to after first match)
                 $isPreSeasonDeadline = false;
                 $rosterDeadlineActive = $now < $rosterChangeEnd;
             }
@@ -306,12 +313,12 @@ $seasonName = $season['name'] ?? 'Aktive Saison';
                                     if ($isPreSeasonDeadline) {
                                         // Pre-season: disable all matches
                                         $disableButton = $rosterDeadlineActive;
-                                        $tooltipText = 'Spielbericht-Vorlage gesperrt: Kadernennung offen';
+                                        $tooltipText = 'Kadernennung offen';
                                     } else {
                                         // Mid-season: disable only return round matches
                                         $isReturnRound = is_numeric($matchday) && (int) $matchday > $halfwayMatchday;
                                         $disableButton = $isReturnRound && $rosterDeadlineActive;
-                                        $tooltipText = 'Spielbericht-Vorlage gesperrt: Nachnominierungen offen';
+                                        $tooltipText = 'Nachnominierungen offen';
                                     }
                                     $disabledAttr = $disableButton ? 'disabled' : '';
                                     $titleAttr = $disableButton ? 'title="' . h($tooltipText) . '"' : '';
