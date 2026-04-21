@@ -147,6 +147,7 @@ $seasonName = $season['name'] ?? 'Aktive Saison';
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo h($seasonName); ?> - Spielbericht Generator</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="stylesheet" href="assets/style.css">
 </head>
 <body data-season-name="<?php echo h($seasonName); ?>">
