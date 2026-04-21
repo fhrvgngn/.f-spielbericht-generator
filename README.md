@@ -39,13 +39,13 @@ Der verwendete Bearer Token ist der aktuell aktive Public Token. (April 2026)
 ## Projektstruktur
 
 - index.php: Hauptseite und Filter-UI
-- api.php: JSON-Endpoint fuer Match/Team/Player-Daten
+- api.php: JSON-Endpoint für Match/Team/Player-Daten
 - lib/supabase.php: Supabase-Client inkl. Cache
 - assets/app.js: PDF-Erstellung und UI-Interaktionen
 - assets/style.css: Styling
 
 ## Hinweise
 
-- Wenn sich Kader aendern, werden PDF-Listen immer live aus der aktuellen API erzeugt.
+- Wenn sich Kader ändern, werden PDF-Listen immer live aus der aktuellen API erzeugt.
 - Richtigkeit der Angaben hängen von den Daten auf hobbyliga-vorderland.at ab.
 
