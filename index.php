@@ -306,13 +306,15 @@ $seasonName = $season['name'] ?? 'Aktive Saison';
                                     if ($isPreSeasonDeadline) {
                                         // Pre-season: disable all matches
                                         $disableButton = $rosterDeadlineActive;
+                                        $tooltipText = 'Spielbericht-Vorlage gesperrt: Kadernennung offen';
                                     } else {
                                         // Mid-season: disable only return round matches
                                         $isReturnRound = is_numeric($matchday) && (int) $matchday > $halfwayMatchday;
                                         $disableButton = $isReturnRound && $rosterDeadlineActive;
+                                        $tooltipText = 'Spielbericht-Vorlage gesperrt: Nachnominierungen offen';
                                     }
                                     $disabledAttr = $disableButton ? 'disabled' : '';
-                                    $titleAttr = $disableButton ? 'title="Spielbericht-Vorlage gesperrt: Nachnominierungen offen"' : '';
+                                    $titleAttr = $disableButton ? 'title="' . h($tooltipText) . '"' : '';
                                 ?>
                                 <tr>
                                     <td><?php echo h((string) $matchday); ?></td>
