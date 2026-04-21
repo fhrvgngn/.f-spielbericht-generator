@@ -15,7 +15,7 @@ Client-seitiger PDF-Generator für die Hobbyliga Vorderland. Die Seite lädt Spi
 - Mobile-optimierte Tabellenansicht (Kurzform mit "PDF"-Button)
 - PDF-Erstellung direkt im Browser (kein Server-Rendering)
 - Dateinamen nach Schema: <matchday>_<home>-<away>-<YYYY-MM-DD>.pdf
-- VLV-Markierung fuer Spieler (kleines "VLV" im Namensfeld)
+- VFV-Markierung für Spieler (kleines "VFV" im Namensfeld)
 
 ## Caching
 
@@ -23,18 +23,9 @@ Client-seitiger PDF-Generator für die Hobbyliga Vorderland. Die Seite lädt Spi
 - TTL: 5 Minuten
 - Cache pro Request-URL in der PHP-Session
 
-## Lokale Entwicklung
-
-1. In das Projektverzeichnis wechseln.
-2. PHP-Server starten:
-   php -S localhost:8000 -t .
-3. Im Browser oeffnen:
-   http://localhost:8000/
-
 ## Konfiguration
 
-Die Supabase URL und der Bearer Token sind in config.php hinterlegt. Der Token ist server-seitig und wird nicht an den Browser ausgegeben.
-Der verwendete Bearer Token ist der aktuell aktive Public Token. (April 2026)
+Die Supabase URL und der Bearer Token sind in config.php hinterlegt. Der Token ist server-seitig und wird nicht an den Browser ausgegeben. Der verwendete Bearer Token ist der aktuell aktive Public Token. (April 2026)
 
 ## Projektstruktur
 
@@ -44,12 +35,10 @@ Der verwendete Bearer Token ist der aktuell aktive Public Token. (April 2026)
 - assets/app.js: PDF-Erstellung und UI-Interaktionen
 - assets/style.css: Styling
 
+## Hinweise
+
+- Richtigkeit der Angaben hängen von den Daten auf hobbyliga-vorderland.at ab.
+
 ## Live-Server
 
    https://tschuta.at/tools/sbg/
-
-## Hinweise
-
-- Wenn sich Kader ändern, werden PDF-Listen immer live aus der aktuellen API erzeugt.
-- Richtigkeit der Angaben hängen von den Daten auf hobbyliga-vorderland.at ab.
-
