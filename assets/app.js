@@ -1,3 +1,5 @@
+import { applySeasonFixes } from './season-2026-fixes.js'; // TODO: Remove after 2026 season
+
 (() => {
     const { jsPDF } = window.jspdf || {};
     if (!jsPDF) {
@@ -64,8 +66,16 @@
         });
 
         const rows = 30;
-        const homePlayers = sortPlayers(Array.isArray(data.players?.home) ? data.players.home : []);
-        const awayPlayers = sortPlayers(Array.isArray(data.players?.away) ? data.players.away : []);
+        const seasonId = data.match?.season_id || '';
+        
+        // Apply season-specific fixes (e.g., FC Viktorsberg 2026 name swap)
+        const homePlayersRaw = Array.isArray(data.players?.home) ? data.players.home : [];
+        const awayPlayersRaw = Array.isArray(data.players?.away) ? data.players.away : [];
+        const homePlayersFixed = applySeasonFixes(homePlayersRaw, data.teams?.home?.id || '', seasonId);
+        const awayPlayersFixed = applySeasonFixes(awayPlayersRaw, data.teams?.away?.id || '', seasonId);
+        
+        const homePlayers = sortPlayers(homePlayersFixed);
+        const awayPlayers = sortPlayers(awayPlayersFixed);
 
         renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows);
 
