@@ -46,4 +46,11 @@ Der verwendete Bearer Token ist der aktuell aktive Public Token.
 
 ## Hinweise
 
+- Fuer Produktion muss SSL-Verify aktiv sein (cURL).
+   - Stelle sicher, dass in lib/supabase.php keine Optionen gesetzt sind, die SSL deaktivieren. (CURLOPT_SSL_VERIFYPEER => false, CURLOPT_SSL_VERIFYHOST => 0,)
+   - Hinterlege einen gueltigen CA-Bundle Pfad in php.ini, z.B.:
+      curl.cainfo="C:\\PHP\\extras\\ssl\\cacert.pem"
+      openssl.cafile="C:\\PHP\\extras\\ssl\\cacert.pem"
+   - PHP/Webserver danach neu starten.
 - Wenn sich Kader aendern, werden PDF-Listen immer live aus der aktuellen API erzeugt.
+
