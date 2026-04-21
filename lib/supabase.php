@@ -26,8 +26,6 @@ function supabase_get(string $path, array $query = []): array
 
     $ch = curl_init($url);
     curl_setopt_array($ch, [
-        CURLOPT_SSL_VERIFYPEER => true,
-        CURLOPT_SSL_VERIFYHOST => 1,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_HTTPHEADER => [
             'Authorization: Bearer ' . SUPABASE_TOKEN,
