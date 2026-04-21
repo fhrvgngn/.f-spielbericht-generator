@@ -14,7 +14,7 @@ Client-seitiger PDF-Generator für die Hobbyliga Vorderland. Die Seite lädt Spi
 - Filter nach Heimmannschaft und Spieltag
 - Mobile-optimierte Tabellenansicht (Kurzform mit "PDF"-Button)
 - PDF-Erstellung direkt im Browser (kein Server-Rendering)
-- Dateinamen nach Schema: <matchday>_<home>-<away>-<YYYY-MM-DD>.pdf
+- Dateinamen nach Schema: `<matchday>_<home>-<away>-<YYYY-MM-DD>.pdf`
 - VFV-Markierung für Spieler (kleines "VFV" im Namensfeld)
 
 ## Caching
