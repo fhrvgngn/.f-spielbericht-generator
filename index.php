@@ -55,6 +55,17 @@ sort($matchdays);
 $filterHomeId = $_GET['home_team_id'] ?? '';
 $filterMatchday = $_GET['matchday'] ?? '';
 
+// Validate filter inputs
+if ($filterHomeId !== '' && !isset($teamMap[$filterHomeId])) {
+    $errors[] = 'Nice try. Tampering with the values is smart but senseless.';
+    $filterHomeId = '';
+}
+
+if ($filterMatchday !== '' && !in_array((int) $filterMatchday, $matchdays, true)) {
+    $errors[] = 'Nice try. Tampering with the values is smart but senseless.';
+    $filterMatchday = '';
+}
+
 $homeMatchdays = [];
 if ($filterHomeId !== '') {
     foreach ($allMatches as $match) {
