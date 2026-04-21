@@ -44,6 +44,10 @@ Der verwendete Bearer Token ist der aktuell aktive Public Token. (April 2026)
 - assets/app.js: PDF-Erstellung und UI-Interaktionen
 - assets/style.css: Styling
 
+## Live-Server
+
+   https://tschuta.at/tools/sbg/
+
 ## Hinweise
 
 - Wenn sich Kader ändern, werden PDF-Listen immer live aus der aktuellen API erzeugt.
