@@ -3,7 +3,28 @@
 declare(strict_types=1);
 
 date_default_timezone_set('Europe/Vienna');
+
+// Validate origin and set CORS headers
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+$allowedOrigins = ['https://tschuta.at', 'http://localhost:5500', 'http://127.0.0.1:5500'];
+
+if (!in_array($origin, $allowedOrigins, true)) {
+    http_response_code(403);
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'forbidden']);
+    exit;
+}
+
+header("Access-Control-Allow-Origin: $origin");
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json');
+
+// Handle preflight requests
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
 
 $raw = file_get_contents('php://input');
 $event = json_decode($raw, true);
