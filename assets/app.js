@@ -30,6 +30,27 @@ import { applySeasonFixes } from './season-2026-fixes.js'; // TODO: Remove after
                 const pdf = buildPdf(payload, seasonName);
                 const filename = buildFilename(payload);
                 pdf.save(filename);
+
+                // Send telemetry (fire-and-forget)
+                const event = {
+                    ts: new Date().toISOString(),
+                    match_id: payload.match?.id,
+                    matchday: payload.match?.matchday,
+                    season_id: payload.match?.season_id,
+                    home: { id: payload.teams?.home?.id, name: payload.teams?.home?.name },
+                    away: { id: payload.teams?.away?.id, name: payload.teams?.away?.name },
+                    event: 'pdf_generated',
+                };
+                const body = JSON.stringify(event);
+                const ok = navigator.sendBeacon('telemetry.php', new Blob([body], { type: 'application/json' }));
+                if (!ok) {
+                    fetch('telemetry.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body,
+                        keepalive: true,
+                    }).catch(() => {}); // Silently ignore telemetry failures
+                }
             } catch (error) {
                 alert(`Fehler beim Erstellen: ${error.message}`);
             } finally {
