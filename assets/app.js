@@ -147,16 +147,10 @@ import { applySeasonFixes } from './season-2026-fixes.js'; // TODO: Remove after
         doc.text(`SPIELBERICHT - HOBBYLIGA VORDERLAND ${seasonLabel}`, margin, y);
 
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.text('hobbyliga-vorderland.at', pageWidth - margin, y, { align: 'right' });
+        doc.setFontSize(8);
+        doc.text('https://tschuta.at/tools/sbg/', pageWidth - margin, y, { align: 'right' });
 
-        doc.setFontSize(4.5);
-        doc.text('©2026 Reinhard Lins .fahrvergnuegen', pageWidth - 5, pageHeight - 15, {
-            angle: 90,
-            align: 'left',
-        });
-
-        y += 8;
+            y += 8;
         drawLabelLine(doc, margin, y, 'Datum', 30, ':');
         drawLabelLine(doc, 60, y, 'Beginn', 20, ':');
         drawLabelLineCenteredColon(doc, 95, y, 'Halbzeit', 20);
