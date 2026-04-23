@@ -282,6 +282,7 @@ $seasonName = $season['name'] ?? 'Aktive Saison';
 
         <section class="panel">
             <form method="get" class="filter">
+                <input type="hidden" name="matchday" value="<?php echo h($filterMatchday); ?>">
                 <label for="home_team_id">Heimmannschaft</label>
                 <select id="home_team_id" name="home_team_id" onchange="this.form.submit()">
                     <option value="">Alle</option>
