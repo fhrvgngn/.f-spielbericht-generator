@@ -39,6 +39,13 @@ body {
     border: 1px solid #f8b4b4;
 }
 
+.hero-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
 .hero h1 {
     margin: 0 0 8px;
     font-size: 32px;
@@ -203,6 +210,27 @@ tbody tr:hover {
     border-color: var(--border);
 }
 
+.btn-secondary {
+    display: inline-block;
+    padding: 10px 16px;
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(185, 28, 28, 0.15);
+    border-color: rgba(185, 28, 28, 0.35);
+}
+
 .page-footer {
     margin-top: 6px;
     font-size: 12px;
@@ -214,13 +242,82 @@ tbody tr:hover {
     margin: 4px 0;
 }
 
+.manual-form {
+    max-width: 600px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.form-group input[type="date"],
+.form-group input[type="time"],
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #ffffff;
+    transition: border-color 0.2s ease;
+}
+
+.form-group input[type="date"]:focus,
+.form-group input[type="time"]:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.radio-group {
+    display: flex;
+    gap: 20px;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.radio-label input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
 @media (max-width: 900px) {
     .hero {
         border-radius: 16px;
     }
 
+    .hero-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
     .panel {
         padding: 16px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
     }
 
     table {

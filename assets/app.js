@@ -1,130 +1,129 @@
 import { applySeasonFixes } from './season-2026-fixes.js'; // TODO: Remove after 2026 season
 
-(() => {
-    const { jsPDF } = window.jspdf || {};
-    if (!jsPDF) {
-        return;
+const { jsPDF } = window.jspdf || {};
+if (!jsPDF) {
+    console.error('jsPDF library not loaded');
+}
+
+const seasonName = document.body?.dataset?.seasonName || '';
+
+// Initialize PDF generation for existing match buttons
+const buttons = document.querySelectorAll('[data-generate]');
+buttons.forEach((button) => {
+    button.addEventListener('click', async () => {
+        const matchId = button.dataset.matchId;
+        if (!matchId) {
+            return;
+        }
+
+        button.disabled = true;
+        setButtonText(button, 'PDF wird erstellt...', '...');
+
+        try {
+            const response = await fetch(`api.php?match_id=${encodeURIComponent(matchId)}`);
+            const payload = await response.json();
+
+            if (!response.ok) {
+                throw new Error(payload.error || 'Unbekannter Fehler');
+            }
+
+            const pdf = buildPdf(payload, seasonName);
+            const filename = buildFilename(payload);
+            pdf.save(filename);
+
+            // Send telemetry (fire-and-forget)
+            const event = {
+                ts: new Date().toISOString(),
+                match_id: payload.match?.id,
+                matchday: payload.match?.matchday,
+                season_id: payload.match?.season_id,
+                home: { id: payload.teams?.home?.id, name: payload.teams?.home?.name },
+                away: { id: payload.teams?.away?.id, name: payload.teams?.away?.name },
+                event: 'pdf_generated',
+            };
+            const body = JSON.stringify(event);
+            const ok = navigator.sendBeacon('telemetry.php', new Blob([body], { type: 'application/json' }));
+            if (!ok) {
+                fetch('telemetry.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body,
+                    keepalive: true,
+                }).catch(() => {}); // Silently ignore telemetry failures
+            }
+        } catch (error) {
+            alert(`Fehler beim Erstellen: ${error.message}`);
+        } finally {
+            button.disabled = false;
+            setButtonText(button, 'Spielbericht-Vorlage erstellen', 'PDF');
+        }
+    });
+});
+
+function setButtonText(button, fullText, shortText) {
+    const fullSpan = button.querySelector('.btn-full');
+    const shortSpan = button.querySelector('.btn-short');
+
+    if (fullSpan && shortSpan) {
+        fullSpan.textContent = fullText;
+        shortSpan.textContent = shortText;
+    } else {
+        button.textContent = fullText;
     }
+}
 
-    const seasonName = document.body?.dataset?.seasonName || '';
-
-    const buttons = document.querySelectorAll('[data-generate]');
-    buttons.forEach((button) => {
-        button.addEventListener('click', async () => {
-            const matchId = button.dataset.matchId;
-            if (!matchId) {
-                return;
-            }
-
-            button.disabled = true;
-            setButtonText(button, 'PDF wird erstellt...', '...');
-
-            try {
-                const response = await fetch(`api.php?match_id=${encodeURIComponent(matchId)}`);
-                const payload = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(payload.error || 'Unbekannter Fehler');
-                }
-
-                const pdf = buildPdf(payload, seasonName);
-                const filename = buildFilename(payload);
-                pdf.save(filename);
-
-                // Send telemetry (fire-and-forget)
-                const event = {
-                    ts: new Date().toISOString(),
-                    match_id: payload.match?.id,
-                    matchday: payload.match?.matchday,
-                    season_id: payload.match?.season_id,
-                    home: { id: payload.teams?.home?.id, name: payload.teams?.home?.name },
-                    away: { id: payload.teams?.away?.id, name: payload.teams?.away?.name },
-                    event: 'pdf_generated',
-                };
-                const body = JSON.stringify(event);
-                const ok = navigator.sendBeacon('telemetry.php', new Blob([body], { type: 'application/json' }));
-                if (!ok) {
-                    fetch('telemetry.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body,
-                        keepalive: true,
-                    }).catch(() => {}); // Silently ignore telemetry failures
-                }
-            } catch (error) {
-                alert(`Fehler beim Erstellen: ${error.message}`);
-            } finally {
-                button.disabled = false;
-                setButtonText(button, 'Spielbericht-Vorlage erstellen', 'PDF');
-            }
-        });
+export function buildPdf(data, seasonLabel, matchType = null) {
+    const doc = new jsPDF({
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait',
     });
 
-    function setButtonText(button, fullText, shortText) {
-        const fullSpan = button.querySelector('.btn-full');
-        const shortSpan = button.querySelector('.btn-short');
+    doc.setProperties({
+        title: `Spielbericht Hobbyliga ${seasonLabel}`,
+        author: '.fahrvergnuegen',
+        creator: 'Spielbericht Generator',
+    });
 
-        if (fullSpan && shortSpan) {
-            fullSpan.textContent = fullText;
-            shortSpan.textContent = shortText;
-        } else {
-            button.textContent = fullText;
+    const rows = 30;
+    const seasonId = data.match?.season_id || '';
+    
+    // Apply season-specific fixes (e.g., FC Viktorsberg 2026 name swap)
+    const homePlayersRaw = Array.isArray(data.players?.home) ? data.players.home : [];
+    const awayPlayersRaw = Array.isArray(data.players?.away) ? data.players.away : [];
+    const homePlayersFixed = applySeasonFixes(homePlayersRaw, data.teams?.home?.id || '', seasonId);
+    const awayPlayersFixed = applySeasonFixes(awayPlayersRaw, data.teams?.away?.id || '', seasonId);
+    
+    const homePlayers = sortPlayers(homePlayersFixed);
+    const awayPlayers = sortPlayers(awayPlayersFixed);
+
+    renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType);
+
+    return doc;
+}
+
+function sortPlayers(players) {
+    return [...players].sort((a, b) => {
+        const aHasNumber = a.jersey_number != null && a.jersey_number !== '';
+        const bHasNumber = b.jersey_number != null && b.jersey_number !== '';
+        
+        // Both have numbers - sort numerically
+        if (aHasNumber && bHasNumber) {
+            return Number(a.jersey_number) - Number(b.jersey_number);
         }
-    }
-
-
-    function buildPdf(data, seasonLabel) {
-        const doc = new jsPDF({
-            unit: 'mm',
-            format: 'a4',
-            orientation: 'portrait',
-        });
-
-        doc.setProperties({
-            title: `Spielbericht Hobbyliga ${seasonLabel}`,
-            author: '.fahrvergnuegen',
-            creator: 'Spielbericht Generator',
-        });
-
-        const rows = 30;
-        const seasonId = data.match?.season_id || '';
         
-        // Apply season-specific fixes (e.g., FC Viktorsberg 2026 name swap)
-        const homePlayersRaw = Array.isArray(data.players?.home) ? data.players.home : [];
-        const awayPlayersRaw = Array.isArray(data.players?.away) ? data.players.away : [];
-        const homePlayersFixed = applySeasonFixes(homePlayersRaw, data.teams?.home?.id || '', seasonId);
-        const awayPlayersFixed = applySeasonFixes(awayPlayersRaw, data.teams?.away?.id || '', seasonId);
+        // One has number, one doesn't - number comes first
+        if (aHasNumber && !bHasNumber) return -1;
+        if (!aHasNumber && bHasNumber) return 1;
         
-        const homePlayers = sortPlayers(homePlayersFixed);
-        const awayPlayers = sortPlayers(awayPlayersFixed);
+        // Neither has number - sort by last name alphabetically
+        const aName = (a.last_name || '').toLowerCase();
+        const bName = (b.last_name || '').toLowerCase();
+        return aName.localeCompare(bName);
+    });
+}
 
-        renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows);
-
-        return doc;
-    }
-
-    function sortPlayers(players) {
-        return [...players].sort((a, b) => {
-            const aHasNumber = a.jersey_number != null && a.jersey_number !== '';
-            const bHasNumber = b.jersey_number != null && b.jersey_number !== '';
-            
-            // Both have numbers - sort numerically
-            if (aHasNumber && bHasNumber) {
-                return Number(a.jersey_number) - Number(b.jersey_number);
-            }
-            
-            // One has number, one doesn't - number comes first
-            if (aHasNumber && !bHasNumber) return -1;
-            if (!aHasNumber && bHasNumber) return 1;
-            
-            // Neither has number - sort by last name alphabetically
-            const aName = (a.last_name || '').toLowerCase();
-            const bName = (b.last_name || '').toLowerCase();
-            return aName.localeCompare(bName);
-        });
-    }
-
-    function buildFilename(data) {
+export function buildFilename(data) {
         const match = data.match || {};
         const teams = data.teams || {};
         const matchdayValue = String(match.matchday ?? '').padStart(2, '0');
@@ -135,48 +134,37 @@ import { applySeasonFixes } from './season-2026-fixes.js'; // TODO: Remove after
         return `${matchdayValue}_${homeShort}-${awayShort}-${datePart}.pdf`;
     }
 
-
-    function extractDate(dateString) {
-        const date = new Date(dateString);
-        if (Number.isNaN(date.getTime())) {
-            return '';
-        }
-
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-
-        return `${year}-${month}-${day}`;
+function extractDate(dateString) {
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) {
+        return '';
     }
 
-    function sanitizeSegment(value) {
-        return String(value || '')
-            .trim()
-            .replace(/\s+/g, '-')
-            .replace(/[^\p{L}\p{N}_-]/gu, '')
-            .replace(/-+/g, '-');
-    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
 
-    function renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows) {
-        const pageWidth = 210;
-        const pageHeight = 297;
-        const margin = 12;
-        let y = 12;
+    return `${year}-${month}-${day}`;
+}
 
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(12);
-        doc.text(`SPIELBERICHT - HOBBYLIGA VORDERLAND ${seasonLabel}`, margin, y);
+function sanitizeSegment(value) {
+    return String(value || '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/[^\p{L}\p{N}_-]/gu, '')
+        .replace(/-+/g, '-');
+}
 
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
-        doc.text('https://tschuta.at/tools/sbg/', pageWidth - margin, y, { align: 'right' });
+function renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType = null) {
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const margin = 12;
+    let y = 12;
 
-            y += 8;
-        drawLabelLine(doc, margin, y, 'Datum', 30, ':');
-        drawLabelLine(doc, 60, y, 'Beginn', 20, ':');
-        drawLabelLineCenteredColon(doc, 95, y, 'Halbzeit', 20);
-        drawLabelLineCenteredColon(doc, 135, y, 'Endstand', 25);
-
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    const titleSuffix = matchType ? ` - ${matchType}` : '';
+    doc.text(`SPIELBERICHT - HOBBYLIGA VORDERLAND ${seasonLabel}${titleSuffix}`, margin, y);
         y += 10;
         drawLabelLine(doc, margin, y, 'Heim', 70);
         drawLabelLine(doc, 115, y, 'Gast', 70);
@@ -352,4 +340,4 @@ import { applySeasonFixes } from './season-2026-fixes.js'; // TODO: Remove after
         doc.text('Minute', x + 43.5, y + 7.5);
         doc.line(x, y + 8.5, x + width, y + 8.5);
     }
-})();
+
