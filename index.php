@@ -72,6 +72,43 @@ sort($matchdays);
 $filterHomeId = $_GET['home_team_id'] ?? '';
 $filterMatchday = $_GET['matchday'] ?? '';
 
+// Track if matchday was auto-selected (not manually chosen by user)
+$matchdayAutoSelected = false;
+
+// Auto-select next upcoming matchday if no filter is explicitly set
+if ($filterMatchday === '' && !isset($_GET['matchday'])) {
+    $now = new DateTime();
+    $now->setTimezone(new DateTimeZone(date_default_timezone_get()));
+    
+    $nextMatchday = null;
+    $closestFutureDate = null;
+    
+    foreach ($allMatches as $match) {
+        if (isset($match['match_date'], $match['matchday'])) {
+            try {
+                $matchDate = new DateTime($match['match_date']);
+                $matchDate->setTimezone(new DateTimeZone(date_default_timezone_get()));
+                
+                // Find the matchday with the closest future or current match
+                if ($matchDate >= $now) {
+                    if ($closestFutureDate === null || $matchDate < $closestFutureDate) {
+                        $closestFutureDate = $matchDate;
+                        $nextMatchday = (int) $match['matchday'];
+                    }
+                }
+            } catch (Throwable $e) {
+                // Skip invalid dates
+            }
+        }
+    }
+    
+    // Set the filter to the next upcoming matchday
+    if ($nextMatchday !== null) {
+        $filterMatchday = (string) $nextMatchday;
+        $matchdayAutoSelected = true;
+    }
+}
+
 // Validate filter inputs
 if ($filterHomeId !== '' && !isset($teamMap[$filterHomeId])) {
     $errors[] = 'Nice try. Tampering with the values is smart but senseless.';
@@ -258,7 +295,8 @@ $seasonName = $season['name'] ?? 'Aktive Saison';
                 <div class="matchday-buttons" role="group" aria-label="Spieltag">
                     <span class="filter-label">Spieltag</span>
                     <?php
-                        $allActive = $filterMatchday === '' ? 'is-active' : '';
+                        // "Alle" is active only if explicitly selected (not auto-selected)
+                        $allActive = ($filterMatchday === '' || (isset($_GET['matchday']) && $_GET['matchday'] === '')) ? 'is-active' : '';
                         $allDisabled = ($filterHomeId !== '' && empty($homeMatchdays)) ? 'disabled' : '';
                         $allTitle = $allDisabled ? 'title="Kein Heimspiel an diesem Spieltag"' : '';
                     ?>
