@@ -394,7 +394,7 @@ $seasonName = $season['name'] ?? 'Aktive Saison';
             </div>
         </section>
         <footer class="page-footer">
-            <p>©2026 Reinhard Lins .fahrvergnuegen.com</p>
+            <p>© 2026 Reinhard Lins .fahrvergnuegen.com</p>
             <p>Hinweis: Der erzeugte PDF-Inhalt hängt vom Datenstand auf <a href="https://hobbyliga-vorderland.at" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 0.25em; text-decoration: none; color: inherit;">hobbyliga-vorderland.at</a> ab.</p>
             <p>
                 <a href="https://github.com/fhrvgngn/.f-spielbericht-generator" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 0.25em; text-decoration: none; color: inherit;">
