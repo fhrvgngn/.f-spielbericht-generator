@@ -90,9 +90,6 @@ $seasonId = $season['id'] ?? '';
 
         <section class="panel">
             <h2>Spielbericht-Vorlage erstellen</h2>
-            <p style="margin-bottom: 24px; color: var(--muted);">
-                Erstellen Sie eine leere Spielbericht-Vorlage mit den Mannschaftskadern.
-            </p>
 
             <form id="manual-form" class="manual-form">
                 <div class="form-group">

@@ -270,6 +270,10 @@ tbody tr:hover {
     transition: border-color 0.2s ease;
 }
 
+.form-group select option:disabled {
+    color: #d1d5db;
+}
+
 .form-group input[type="date"]:focus,
 .form-group input[type="time"]:focus,
 .form-group select:focus {

@@ -16,6 +16,10 @@ Client-seitiger PDF-Generator für die Hobbyliga Vorderland. Die Seite lädt Spi
 - PDF-Erstellung direkt im Browser (kein Server-Rendering)
 - Dateinamen nach Schema: `<matchday>_<home>-<away>-<YYYY-MM-DD>.pdf`
 - VFV-Markierung für Spieler (kleines "VFV" im Namensfeld)
+- **Manuelle Vorlage:** Erstelle PDFs für Cup- oder Testspiele ohne existierende Match-Daten
+  - Eigene Seite mit Formular (Typ, Datum, Uhrzeit, Heim-/Gastmannschaft)
+  - Lädt Mannschaftskader automatisch aus der Datenbank
+  - Fügt Match-Typ (Cup/Testspiel) zum PDF-Titel hinzu
 
 ## Caching
 
@@ -30,9 +34,11 @@ Die Supabase URL und der Bearer Token sind in config.php hinterlegt. Der Token i
 ## Projektstruktur
 
 - index.php: Hauptseite und Filter-UI
-- api.php: JSON-Endpoint für Match/Team/Player-Daten
+- manual.php: Formularseite für manuelle PDF-Vorlagen (Cup/Testspiele)
+- api.php: JSON-Endpoint für Match/Team/Player-Daten (unterstützt Match-ID oder Team-IDs)
 - lib/supabase.php: Supabase-Client inkl. Cache
 - assets/app.js: PDF-Erstellung und UI-Interaktionen
+- assets/manual-form.js: Formular-Logik für manuelle Vorlagen
 - assets/style.css: Styling
 
 ## Hinweise

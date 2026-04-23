@@ -2,8 +2,45 @@ import { buildPdf, buildFilename } from './app.js';
 
 const form = document.getElementById('manual-form');
 const submitBtn = document.getElementById('submit-btn');
+const homeTeamSelect = document.getElementById('home_team_id');
+const awayTeamSelect = document.getElementById('away_team_id');
 const seasonName = document.body?.dataset?.seasonName || '';
 const seasonId = document.body?.dataset?.seasonId || '';
+
+// Prevent selecting the same team for home and away
+if (homeTeamSelect && awayTeamSelect) {
+    homeTeamSelect.addEventListener('change', () => {
+        updateTeamOptions(homeTeamSelect, awayTeamSelect);
+    });
+
+    awayTeamSelect.addEventListener('change', () => {
+        updateTeamOptions(awayTeamSelect, homeTeamSelect);
+    });
+}
+
+function updateTeamOptions(changedSelect, otherSelect) {
+    const selectedValue = changedSelect.value;
+    
+    // Enable all options in the other select first
+    Array.from(otherSelect.options).forEach(option => {
+        if (option.value !== '') {
+            option.disabled = false;
+        }
+    });
+    
+    // Disable the selected team in the other select
+    if (selectedValue) {
+        const optionToDisable = otherSelect.querySelector(`option[value="${selectedValue}"]`);
+        if (optionToDisable) {
+            optionToDisable.disabled = true;
+            
+            // If the other select has the same value selected, reset it
+            if (otherSelect.value === selectedValue) {
+                otherSelect.value = '';
+            }
+        }
+    }
+}
 
 if (form && submitBtn) {
     form.addEventListener('submit', async (e) => {
@@ -88,6 +125,16 @@ if (form && submitBtn) {
 
             // Reset form on success
             form.reset();
+            
+            // Re-enable all team options after reset
+            if (homeTeamSelect && awayTeamSelect) {
+                Array.from(homeTeamSelect.options).forEach(option => {
+                    if (option.value !== '') option.disabled = false;
+                });
+                Array.from(awayTeamSelect.options).forEach(option => {
+                    if (option.value !== '') option.disabled = false;
+                });
+            }
         } catch (error) {
             alert(`Fehler beim Erstellen: ${error.message}`);
         } finally {
