@@ -103,6 +103,10 @@ $seasonId = $season['id'] ?? '';
                             <input type="radio" name="match_type" value="Testspiel">
                             Testspiel
                         </label>
+                        <label class="radio-label">
+                            <input type="radio" name="match_type" value="Ersatzspiel">
+                            Ersatzspiel
+                        </label>
                     </div>
                 </div>
 
