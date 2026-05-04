@@ -191,8 +191,8 @@ function renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matc
 
     const rowHeight = (signatureTop - tableTop - headerHeight) / rows;
 
-    drawPlayerTable(doc, leftX, tableTop, tableWidth, headerHeight, rowHeight, rows, 'Name', 'Tore');
-    drawPlayerTable(doc, rightX, tableTop, tableWidth, headerHeight, rowHeight, rows, 'Name', 'Tore');
+    drawPlayerTable(doc, leftX, tableTop, tableWidth, headerHeight, rowHeight, rows, 'Nummer', 'Name', 'Tore');
+    drawPlayerTable(doc, rightX, tableTop, tableWidth, headerHeight, rowHeight, rows, 'Nummer', 'Name', 'Tore');
 
     fillPlayers(doc, leftX, tableTop, tableWidth, headerHeight, rowHeight, rows, homePlayers);
     fillPlayers(doc, rightX, tableTop, tableWidth, headerHeight, rowHeight, rows, awayPlayers);
@@ -270,21 +270,24 @@ function drawLabelLineCenteredColon(doc, x, y, label, lineWidth) {
     doc.setFont('helvetica', 'normal');
 }
 
-function drawPlayerTable(doc, x, y, width, headerHeight, rowHeight, rows, nameLabel, goalsLabel) {
+function drawPlayerTable(doc, x, y, width, headerHeight, rowHeight, rows, numberLabel, nameLabel, goalsLabel) {
     doc.rect(x, y, width, headerHeight + rowHeight * rows);
     doc.line(x, y + headerHeight, x + width, y + headerHeight);
 
+    const numWidth = 16;
     const goalsWidth = 26;
-    const nameWidth = width - goalsWidth;
+    const nameWidth = width - numWidth - goalsWidth;
 
-    doc.line(x + nameWidth, y, x + nameWidth, y + headerHeight + rowHeight * rows);
+    doc.line(x + numWidth, y, x + numWidth, y + headerHeight + rowHeight * rows);
+    doc.line(x + numWidth + nameWidth, y, x + numWidth + nameWidth, y + headerHeight + rowHeight * rows);
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8);
-    doc.text(nameLabel, x + 2, y + 4);
-    doc.text(goalsLabel, x + nameWidth + 2, y + 4);
+    doc.text(numberLabel, x + 2, y + 4);
+    doc.text(nameLabel, x + numWidth + 2, y + 4);
+    doc.text(goalsLabel, x + numWidth + nameWidth + 2, y + 4);
     doc.setFont('helvetica', 'normal');
-    doc.text('Minute', x + nameWidth + 14, y + 4);
+    doc.text('Minute', x + numWidth + nameWidth + 14, y + 4);
 
     for (let i = 1; i <= rows; i += 1) {
         const rowY = y + headerHeight + i * rowHeight;
@@ -293,7 +296,8 @@ function drawPlayerTable(doc, x, y, width, headerHeight, rowHeight, rows, nameLa
 }
 
 function fillPlayers(doc, x, y, width, headerHeight, rowHeight, rows, players) {
-    const nameWidth = width - 26;
+    const numWidth = 16;
+    const nameWidth = width - numWidth - 26;
     doc.setFontSize(8);
 
     const safePlayers = Array.isArray(players) ? players : [];
@@ -304,12 +308,12 @@ function fillPlayers(doc, x, y, width, headerHeight, rowHeight, rows, players) {
         const rowBottom = y + headerHeight + rowHeight * (index + 1);
         const name = `${player.last_name || ''} ${player.first_name || ''}`.trim();
 
-        doc.text(name, x + 2, rowY);
+        doc.text(name, x + numWidth + 2, rowY);
 
         if (player.is_vlv_player) {
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(4);
-            doc.text('VFV', x + nameWidth - 1, rowBottom - 0.8, { align: 'right' });
+            doc.text('VFV', x + numWidth + nameWidth - 1, rowBottom - 0.8, { align: 'right' });
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(8);
         }
