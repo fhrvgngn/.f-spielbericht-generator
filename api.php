@@ -57,12 +57,12 @@ try {
 
     $homePlayers = supabase_get('players', [
         'team_id' => 'eq.' . $homeTeamId,
-        'order' => 'jersey_number.asc,first_name.asc,last_name.asc',
+        'order' => 'last_name.asc,first_name.asc',
     ]);
 
     $awayPlayers = supabase_get('players', [
         'team_id' => 'eq.' . $awayTeamId,
-        'order' => 'jersey_number.asc,first_name.asc,last_name.asc',
+        'order' => 'last_name.asc,first_name.asc',
     ]);
 
     $response = [
