@@ -316,6 +316,11 @@ $refereeFee = DEFAULT_REFEREE_FEE;
                     const saved = localStorage.getItem('includeSuspensions');
                     toggle.checked = saved !== 'false';
                     
+                    // Initialize localStorage if not set
+                    if (saved === null) {
+                        localStorage.setItem('includeSuspensions', toggle.checked);
+                    }
+                    
                     // Save state on change
                     toggle.addEventListener('change', function() {
                         localStorage.setItem('includeSuspensions', this.checked);
