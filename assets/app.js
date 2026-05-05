@@ -163,11 +163,19 @@ function calculateSuspendedPlayers(data) {
             
             // Player is suspended if this match falls within the suspension range
             if (matchNumber >= startMatch && matchNumber <= endMatch) {
+                // Calculate matchday range for suspension display
+                const startMatchdayIndex = startMatch - 1; // 0-based index
+                const endMatchdayIndex = endMatch - 1; // 0-based index
+                const startMatchday = teamMatches[startMatchdayIndex]?.matchday || 0;
+                const endMatchday = teamMatches[endMatchdayIndex]?.matchday || 0;
+                
                 suspendedPlayers.set(suspension.player_id, {
                     reason: suspension.reason || 'Keine Angabe',
                     matches_suspended: suspension.matches_suspended || 0,
                     matches_remaining: matchesRemaining,
                     current_match_number: matchNumber,
+                    start_matchday: startMatchday,
+                    end_matchday: endMatchday,
                 });
             }
         }
@@ -429,7 +437,11 @@ function fillPlayers(doc, x, y, width, headerHeight, rowHeight, rows, players, s
             // Draw suspension info in goals column
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(5);
-            const suspensionLine1 = `Gesperrt: Spiel ${suspension.current_match_number}/${suspension.matches_suspended}`;
+            // Display matchday range (e.g., "Sperre: ST 3-5" or "Sperre: ST 3" if only one matchday)
+            const matchdayRange = suspension.start_matchday === suspension.end_matchday
+                ? `ST ${suspension.start_matchday}`
+                : `ST ${suspension.start_matchday}-${suspension.end_matchday}`;
+            const suspensionLine1 = `Sperre: ${matchdayRange}`;
             const suspensionLine2 = `${suspension.reason}`;
             doc.text(suspensionLine1, x + numWidth + nameWidth + 1, rowY - 1.5);
             doc.text(suspensionLine2, x + numWidth + nameWidth + 1, rowY + 0.5);
