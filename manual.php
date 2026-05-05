@@ -8,6 +8,7 @@ require_once __DIR__ . '/lib/supabase.php';
 $errors = [];
 $season = null;
 $teams = [];
+$latestSuspensionDate = null;
 
 try {
     $seasons = supabase_get('seasons', [
@@ -42,6 +43,20 @@ try {
                 'id' => 'in.(' . $teamIdList . ')',
                 'order' => 'name.asc',
             ]);
+        }
+        
+        // Fetch latest suspension for info display
+        try {
+            $suspensions = supabase_get('suspensions', [
+                'season_id' => 'eq.' . $season['id'],
+                'order' => 'created_at.desc',
+                'limit' => 1,
+            ]);
+            if (!empty($suspensions) && isset($suspensions[0]['created_at'])) {
+                $latestSuspensionDate = $suspensions[0]['created_at'];
+            }
+        } catch (Throwable $e) {
+            // Silently ignore suspension fetch errors
         }
     }
 } catch (Throwable $e) {
@@ -80,6 +95,22 @@ $seasonId = $season['id'] ?? '';
                     <input type="checkbox" id="suspensions-toggle" style="cursor: pointer;">
                     <span>Sperren berücksichtigen (Experimentell)</span>
                 </label>
+                <?php if ($latestSuspensionDate) : ?>
+                    <?php
+                        try {
+                            $dt = new DateTime($latestSuspensionDate);
+                            $dt->setTimezone(new DateTimeZone('Europe/Vienna'));
+                            $formatted = $dt->format('d.m.Y H:i');
+                        } catch (Throwable $e) {
+                            $formatted = null;
+                        }
+                    ?>
+                    <?php if ($formatted) : ?>
+                        <div style="margin-top: 4px; font-size: 0.8em; opacity: 0.7;">
+                            Letzte Sperre eingetragen am <?php echo h($formatted); ?>
+                        </div>
+                    <?php endif; ?>
+                <?php endif; ?>
             </div>
         </header>
 
