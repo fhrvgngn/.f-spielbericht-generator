@@ -311,9 +311,9 @@ $seasonName = $season['name'] ?? 'Aktive Saison';
             (function() {
                 const toggle = document.getElementById('suspensions-toggle');
                 if (toggle) {
-                    // Load saved state
+                    // Load saved state (default: enabled)
                     const saved = localStorage.getItem('includeSuspensions');
-                    toggle.checked = saved === 'true';
+                    toggle.checked = saved !== 'false';
                     
                     // Save state on change
                     toggle.addEventListener('change', function() {

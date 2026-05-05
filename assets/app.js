@@ -46,6 +46,7 @@ buttons.forEach((button) => {
                 season_id: payload.match?.season_id,
                 home: { id: payload.teams?.home?.id, name: payload.teams?.home?.name },
                 away: { id: payload.teams?.away?.id, name: payload.teams?.away?.name },
+                suspensions_enabled: includeSuspensions,
                 event: 'pdf_generated',
             };
             const body = JSON.stringify(event);

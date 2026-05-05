@@ -129,6 +129,7 @@ if (form && submitBtn) {
                 home: { id: data.teams.home.id, name: data.teams.home.name },
                 away: { id: data.teams.away.id, name: data.teams.away.name },
                 match_type: matchType,
+                suspensions_enabled: includeSuspensions,
                 event: 'pdf_generated_manual',
             };
             const body = JSON.stringify(event);
