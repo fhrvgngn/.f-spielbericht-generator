@@ -52,9 +52,10 @@ if (form && submitBtn) {
         const matchTime = formData.get('match_time');
         const homeTeamId = formData.get('home_team_id');
         const awayTeamId = formData.get('away_team_id');
+        const refereeFee = formData.get('referee_fee');
 
         // Validation
-        if (!matchType || !matchDate || !matchTime || !homeTeamId || !awayTeamId) {
+        if (!matchType || !matchDate || !matchTime || !homeTeamId || !awayTeamId || !refereeFee) {
             alert('Bitte füllen Sie alle Felder aus.');
             return;
         }
@@ -115,8 +116,8 @@ if (form && submitBtn) {
                 payload.match_date = data.match_date;
             }
 
-            // Generate PDF with match type
-            const pdf = buildPdf(payload, seasonName, matchType);
+            // Generate PDF with match type and referee fee
+            const pdf = buildPdf(payload, seasonName, matchType, parseFloat(refereeFee));
             const filename = buildFilename(payload);
             pdf.save(filename);
 

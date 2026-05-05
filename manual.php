@@ -8,7 +8,6 @@ require_once __DIR__ . '/lib/supabase.php';
 $errors = [];
 $season = null;
 $teams = [];
-$latestSuspensionDate = null;
 
 try {
     $seasons = supabase_get('seasons', [
@@ -44,20 +43,6 @@ try {
                 'order' => 'name.asc',
             ]);
         }
-        
-        // Fetch latest suspension for info display
-        try {
-            $suspensions = supabase_get('suspensions', [
-                'season_id' => 'eq.' . $season['id'],
-                'order' => 'created_at.desc',
-                'limit' => 1,
-            ]);
-            if (!empty($suspensions) && isset($suspensions[0]['created_at'])) {
-                $latestSuspensionDate = $suspensions[0]['created_at'];
-            }
-        } catch (Throwable $e) {
-            // Silently ignore suspension fetch errors
-        }
     }
 } catch (Throwable $e) {
     $errors[] = $e->getMessage();
@@ -70,6 +55,7 @@ function h(string $value): string
 
 $seasonName = $season['name'] ?? 'Aktive Saison';
 $seasonId = $season['id'] ?? '';
+$refereeFee = DEFAULT_REFEREE_FEE;
 ?>
 <!doctype html>
 <html lang="de">
@@ -80,7 +66,7 @@ $seasonId = $season['id'] ?? '';
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="stylesheet" href="assets/style.css">
 </head>
-<body data-season-name="<?php echo h($seasonName); ?>" data-season-id="<?php echo h($seasonId); ?>">
+<body data-season-name="<?php echo h($seasonName); ?>" data-season-id="<?php echo h($seasonId); ?>" data-referee-fee="<?php echo h((string)$refereeFee); ?>">
     <main class="page">
         <header class="hero">
             <div class="hero-header">
@@ -90,46 +76,7 @@ $seasonId = $season['id'] ?? '';
                 </div>
                 <a href="index.php" class="btn-secondary">← Zurück</a>
             </div>
-            <div style="margin-top: 12px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.1);">
-                <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9em; user-select: none;">
-                    <input type="checkbox" id="suspensions-toggle" style="cursor: pointer;">
-                    <span>Sperren berücksichtigen (Experimentell)</span>
-                </label>
-                <?php if ($latestSuspensionDate) : ?>
-                    <?php
-                        try {
-                            $dt = new DateTime($latestSuspensionDate);
-                            $dt->setTimezone(new DateTimeZone('Europe/Vienna'));
-                            $formatted = $dt->format('d.m.Y H:i');
-                        } catch (Throwable $e) {
-                            $formatted = null;
-                        }
-                    ?>
-                    <?php if ($formatted) : ?>
-                        <div style="margin-top: 4px; font-size: 0.8em; opacity: 0.7;">
-                            Letzte Sperre eingetragen am <?php echo h($formatted); ?>
-                        </div>
-                    <?php endif; ?>
-                <?php endif; ?>
-            </div>
         </header>
-
-        <script>
-            // Load and persist suspensions toggle state
-            (function() {
-                const toggle = document.getElementById('suspensions-toggle');
-                if (toggle) {
-                    // Load saved state (default: enabled)
-                    const saved = localStorage.getItem('includeSuspensions');
-                    toggle.checked = saved !== 'false';
-                    
-                    // Save state on change
-                    toggle.addEventListener('change', function() {
-                        localStorage.setItem('includeSuspensions', this.checked);
-                    });
-                }
-            })();
-        </script>
 
         <?php if (!empty($errors)) : ?>
             <section class="panel error">
@@ -202,6 +149,12 @@ $seasonId = $season['id'] ?? '';
                             </option>
                         <?php endforeach; ?>
                     </select>
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                    <label for="referee_fee" style="margin: 0;">Schiedsrichterspesen:</label>
+                    <input type="number" id="referee_fee" name="referee_fee" value="<?php echo h((string)$refereeFee); ?>" min="0" step="1" required style="width: 80px;">
+                    <span>EUR</span>
                 </div>
 
                 <button type="submit" class="btn" id="submit-btn">

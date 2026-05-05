@@ -6,6 +6,7 @@ if (!jsPDF) {
 }
 
 const seasonName = document.body?.dataset?.seasonName || '';
+const defaultRefereeFee = parseInt(document.body?.dataset?.refereeFee || '80', 10);
 
 // Initialize PDF generation for existing match buttons
 const buttons = document.querySelectorAll('[data-generate]');
@@ -185,7 +186,10 @@ function calculateSuspendedPlayers(data) {
     return suspendedPlayers;
 }
 
-export function buildPdf(data, seasonLabel, matchType = null) {
+export function buildPdf(data, seasonLabel, matchType = null, refereeFee = null) {
+    // Use provided refereeFee, or fall back to default from config
+    const finalRefereeFee = refereeFee !== null ? refereeFee : defaultRefereeFee;
+    
     const doc = new jsPDF({
         unit: 'mm',
         format: 'a4',
@@ -213,7 +217,7 @@ export function buildPdf(data, seasonLabel, matchType = null) {
     // Calculate suspended players (experimental feature)
     const suspendedPlayers = calculateSuspendedPlayers(data);
 
-    renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType, suspendedPlayers);
+    renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType, suspendedPlayers, finalRefereeFee);
 
     return doc;
 }
@@ -265,7 +269,7 @@ function sanitizeSegment(value) {
         .replace(/-+/g, '-');
 }
 
-function renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType = null, suspendedPlayers = null) {
+function renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType = null, suspendedPlayers = null, refereeFee = defaultRefereeFee) {
     const pageWidth = 210;
     const pageHeight = 297;
     const margin = 12;
@@ -336,7 +340,7 @@ function renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matc
     drawCardTable(doc, rightX, cardsTop, tableWidth, cardTableHeight);
 
     doc.setFontSize(8);
-    doc.text('Gebühr erhalten: 80,- EUR', leftX, footerY);
+    doc.text(`Gebühr erhalten: ${refereeFee.toFixed(0)},- EUR`, leftX, footerY);
     doc.setFontSize(6);
     doc.text('Unterschrift Schiedsrichter', rightX, footerY);
     doc.line(rightX, footerY + 1.5, rightX + tableWidth, footerY + 1.5);

@@ -262,6 +262,7 @@ function team_short_name(array $teamMap, ?string $teamId): string
 }
 
 $seasonName = $season['name'] ?? 'Aktive Saison';
+$refereeFee = DEFAULT_REFEREE_FEE;
 ?>
 <!doctype html>
 <html lang="de">
@@ -272,7 +273,7 @@ $seasonName = $season['name'] ?? 'Aktive Saison';
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="stylesheet" href="assets/style.css">
 </head>
-<body data-season-name="<?php echo h($seasonName); ?>">
+<body data-season-name="<?php echo h($seasonName); ?>" data-referee-fee="<?php echo h((string)$refereeFee); ?>">
     <main class="page">
         <header class="hero">
             <div class="hero-header">

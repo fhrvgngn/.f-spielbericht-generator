@@ -20,6 +20,7 @@ Client-seitiger PDF-Generator für die Hobbyliga Vorderland. Die Seite lädt Spi
   - Eigene Seite mit Formular (Typ, Datum, Uhrzeit, Heim-/Gastmannschaft)
   - Lädt Mannschaftskader automatisch aus der Datenbank
   - Fügt Match-Typ (Cup/Testspiel) zum PDF-Titel hinzu
+  - Konfigurierbare Schiedsrichterspesen (pro Spiel anpassbar)
 
 ## Caching
 
@@ -30,6 +31,15 @@ Client-seitiger PDF-Generator für die Hobbyliga Vorderland. Die Seite lädt Spi
 ## Konfiguration
 
 Die Supabase URL und der Bearer Token sind in config.php hinterlegt. Der Token ist server-seitig und wird nicht an den Browser ausgegeben. Der verwendete Bearer Token ist der aktuell aktive anon Token von supabase. (April 2026)
+
+### Schiedsrichterspesen
+
+Der Standardwert für die Schiedsrichterspesen ist in `config.php` als Konstante `DEFAULT_REFEREE_FEE` hinterlegt
+
+- **Index-Seite (Ligaspiele):** Verwendet automatisch den konfigurierten Wert
+- **Manuelle Vorlage:** Zeigt den Wert als Standardwert im Formular, kann aber pro Spiel angepasst werden
+
+Der Wert wird im generierten PDF unter "Gebühr erhalten" angezeigt. Für zukünftige Saisons kann der Wert in der `config.php` angepasst werden.
 
 ## Projektstruktur
 
