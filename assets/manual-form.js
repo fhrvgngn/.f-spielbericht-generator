@@ -69,10 +69,18 @@ if (form && submitBtn) {
         setButtonText(submitBtn, 'PDF wird erstellt...', '...');
 
         try {
+            // Check if suspensions feature is enabled
+            const includeSuspensions = localStorage.getItem('includeSuspensions') === 'true';
+            
             // Fetch team data and rosters using existing api.php
-            const response = await fetch(
-                `api.php?home_team_id=${encodeURIComponent(homeTeamId)}&away_team_id=${encodeURIComponent(awayTeamId)}`
-            );
+            let apiUrl = `api.php?home_team_id=${encodeURIComponent(homeTeamId)}&away_team_id=${encodeURIComponent(awayTeamId)}`;
+            
+            // Add suspensions, match_date, and season_id if feature is enabled
+            if (includeSuspensions) {
+                apiUrl += `&include_suspensions=true&match_date=${encodeURIComponent(matchDate)}&season_id=${encodeURIComponent(seasonId)}`;
+            }
+            
+            const response = await fetch(apiUrl);
             const data = await response.json();
 
             if (!response.ok) {
@@ -95,6 +103,17 @@ if (form && submitBtn) {
                 teams: data.teams,
                 players: data.players,
             };
+
+            // Include suspensions data if available
+            if (data.suspensions) {
+                payload.suspensions = data.suspensions;
+            }
+            if (data.all_matches) {
+                payload.all_matches = data.all_matches;
+            }
+            if (data.match_date) {
+                payload.match_date = data.match_date;
+            }
 
             // Generate PDF with match type
             const pdf = buildPdf(payload, seasonName, matchType);

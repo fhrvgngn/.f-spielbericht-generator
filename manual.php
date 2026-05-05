@@ -75,7 +75,30 @@ $seasonId = $season['id'] ?? '';
                 </div>
                 <a href="index.php" class="btn-secondary">← Zurück</a>
             </div>
+            <div style="margin-top: 12px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.1);">
+                <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9em; user-select: none;">
+                    <input type="checkbox" id="suspensions-toggle" style="cursor: pointer;">
+                    <span>Sperren berücksichtigen (Experimentell)</span>
+                </label>
+            </div>
         </header>
+
+        <script>
+            // Load and persist suspensions toggle state
+            (function() {
+                const toggle = document.getElementById('suspensions-toggle');
+                if (toggle) {
+                    // Load saved state
+                    const saved = localStorage.getItem('includeSuspensions');
+                    toggle.checked = saved === 'true';
+                    
+                    // Save state on change
+                    toggle.addEventListener('change', function() {
+                        localStorage.setItem('includeSuspensions', this.checked);
+                    });
+                }
+            })();
+        </script>
 
         <?php if (!empty($errors)) : ?>
             <section class="panel error">

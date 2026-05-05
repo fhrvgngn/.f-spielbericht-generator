@@ -25,7 +25,12 @@ function supabase_get(string $path, array $query = []): array
     }
 
     $ch = curl_init($url);
-    curl_setopt_array($ch, [
+    
+    // Detect local development environment
+    $isLocalDev = in_array($_SERVER['SERVER_NAME'] ?? '', ['localhost', '127.0.0.1', '::1']) 
+                  || php_sapi_name() === 'cli-server';
+    
+    $curlOptions = [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_HTTPHEADER => [
             'Authorization: Bearer ' . SUPABASE_TOKEN,
@@ -34,7 +39,15 @@ function supabase_get(string $path, array $query = []): array
         ],
         CURLOPT_CONNECTTIMEOUT => 10,
         CURLOPT_TIMEOUT => 30,
-    ]);
+    ];
+    
+    // Disable SSL verification for local development
+    if ($isLocalDev) {
+        $curlOptions[CURLOPT_SSL_VERIFYPEER] = false;
+        $curlOptions[CURLOPT_SSL_VERIFYHOST] = false;
+    }
+    
+    curl_setopt_array($ch, $curlOptions);
 
     $body = curl_exec($ch);
     if ($body === false) {

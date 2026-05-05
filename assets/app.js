@@ -20,7 +20,14 @@ buttons.forEach((button) => {
         setButtonText(button, 'PDF wird erstellt...', '...');
 
         try {
-            const response = await fetch(`api.php?match_id=${encodeURIComponent(matchId)}`);
+            // Check if suspensions feature is enabled
+            const includeSuspensions = localStorage.getItem('includeSuspensions') === 'true';
+            let apiUrl = `api.php?match_id=${encodeURIComponent(matchId)}`;
+            if (includeSuspensions) {
+                apiUrl += '&include_suspensions=true';
+            }
+            
+            const response = await fetch(apiUrl);
             const payload = await response.json();
 
             if (!response.ok) {
@@ -72,6 +79,87 @@ function setButtonText(button, fullText, shortText) {
     }
 }
 
+/**
+ * Calculate which players are suspended for this match
+ * Returns a Map of player_id -> suspension info
+ */
+function calculateSuspendedPlayers(data) {
+    const suspendedPlayers = new Map();
+    
+    // Check if suspensions data is available
+    if (!data.suspensions || !data.all_matches) {
+        return suspendedPlayers;
+    }
+
+    // Get current match date
+    const currentMatchDate = data.match?.match_date || data.match_date;
+    if (!currentMatchDate) {
+        return suspendedPlayers;
+    }
+    
+    const currentDate = new Date(currentMatchDate);
+    
+    // Process each suspension
+    for (const suspension of data.suspensions) {
+        // Skip if suspension is not active or missing data
+        if (!suspension.is_active || !suspension.team_id || !suspension.player_id) {
+            continue;
+        }
+        
+        // Check if suspension is still active based on matches served
+        const matchesRemaining = (suspension.matches_suspended || 0) - (suspension.matches_served || 0);
+        if (matchesRemaining <= 0) {
+            continue;
+        }
+        
+        const createdAt = new Date(suspension.created_at);
+        const teamId = suspension.team_id;
+        
+        // Find all league matches (matchday != null) for this team after suspension was created
+        const teamMatches = data.all_matches
+            .filter(match => {
+                // Only league matches (matchday exists)
+                if (!match.matchday) return false;
+                
+                // Match involves this team
+                const isTeamMatch = match.home_team_id === teamId || match.away_team_id === teamId;
+                if (!isTeamMatch) return false;
+                
+                // Match is after suspension was created
+                const matchDate = new Date(match.match_date);
+                return matchDate >= createdAt;
+            })
+            .sort((a, b) => new Date(a.match_date) - new Date(b.match_date));
+        
+        // Find which suspended match number this current match is
+        const currentMatchIndex = teamMatches.findIndex(match => {
+            const matchDate = new Date(match.match_date);
+            // Match by date (within same day)
+            return matchDate.toDateString() === currentDate.toDateString() &&
+                   (match.home_team_id === teamId || match.away_team_id === teamId);
+        });
+        
+        // If current match is found and within suspension period
+        if (currentMatchIndex !== -1) {
+            const matchNumber = currentMatchIndex + 1; // 1-based
+            const startMatch = (suspension.matches_served || 0) + 1;
+            const endMatch = suspension.matches_suspended || 0;
+            
+            // Player is suspended if this match falls within the suspension range
+            if (matchNumber >= startMatch && matchNumber <= endMatch) {
+                suspendedPlayers.set(suspension.player_id, {
+                    reason: suspension.reason || 'Keine Angabe',
+                    matches_suspended: suspension.matches_suspended || 0,
+                    matches_remaining: matchesRemaining,
+                    current_match_number: matchNumber,
+                });
+            }
+        }
+    }
+    
+    return suspendedPlayers;
+}
+
 export function buildPdf(data, seasonLabel, matchType = null) {
     const doc = new jsPDF({
         unit: 'mm',
@@ -97,7 +185,10 @@ export function buildPdf(data, seasonLabel, matchType = null) {
     const homePlayers = sortPlayers(homePlayersFixed);
     const awayPlayers = sortPlayers(awayPlayersFixed);
 
-    renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType);
+    // Calculate suspended players (experimental feature)
+    const suspendedPlayers = calculateSuspendedPlayers(data);
+
+    renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType, suspendedPlayers);
 
     return doc;
 }
@@ -149,7 +240,7 @@ function sanitizeSegment(value) {
         .replace(/-+/g, '-');
 }
 
-function renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType = null) {
+function renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType = null, suspendedPlayers = null) {
     const pageWidth = 210;
     const pageHeight = 297;
     const margin = 12;
@@ -194,8 +285,8 @@ function renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matc
     drawPlayerTable(doc, leftX, tableTop, tableWidth, headerHeight, rowHeight, rows, 'Nummer', 'Name', 'Tore');
     drawPlayerTable(doc, rightX, tableTop, tableWidth, headerHeight, rowHeight, rows, 'Nummer', 'Name', 'Tore');
 
-    fillPlayers(doc, leftX, tableTop, tableWidth, headerHeight, rowHeight, rows, homePlayers);
-    fillPlayers(doc, rightX, tableTop, tableWidth, headerHeight, rowHeight, rows, awayPlayers);
+    fillPlayers(doc, leftX, tableTop, tableWidth, headerHeight, rowHeight, rows, homePlayers, suspendedPlayers);
+    fillPlayers(doc, rightX, tableTop, tableWidth, headerHeight, rowHeight, rows, awayPlayers, suspendedPlayers);
 
     doc.rect(leftX, signatureTop, tableWidth, signatureHeight);
     doc.rect(rightX, signatureTop, tableWidth, signatureHeight);
@@ -295,9 +386,10 @@ function drawPlayerTable(doc, x, y, width, headerHeight, rowHeight, rows, number
     }
 }
 
-function fillPlayers(doc, x, y, width, headerHeight, rowHeight, rows, players) {
+function fillPlayers(doc, x, y, width, headerHeight, rowHeight, rows, players, suspendedPlayers = null) {
     const numWidth = 16;
-    const nameWidth = width - numWidth - 26;
+    const goalsWidth = 26;
+    const nameWidth = width - numWidth - goalsWidth;
     doc.setFontSize(8);
 
     const safePlayers = Array.isArray(players) ? players : [];
@@ -309,6 +401,24 @@ function fillPlayers(doc, x, y, width, headerHeight, rowHeight, rows, players) {
         const name = `${player.last_name || ''} ${player.first_name || ''}`.trim();
 
         doc.text(name, x + numWidth + 2, rowY);
+
+        // Check if player is suspended
+        const suspension = suspendedPlayers?.get(player.id);
+        if (suspension) {
+            // Draw large "X" in number column
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.text('X', x + numWidth / 2, rowY, { align: 'center' });
+            
+            // Draw suspension info in goals column
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(5);
+            const suspensionLine1 = `Gesperrt: Spiel ${suspension.current_match_number}/${suspension.matches_suspended}`;
+            const suspensionLine2 = `${suspension.reason}`;
+            doc.text(suspensionLine1, x + numWidth + nameWidth + 1, rowY - 1.5);
+            doc.text(suspensionLine2, x + numWidth + nameWidth + 1, rowY + 0.5);
+            doc.setFontSize(8);
+        }
 
         if (player.is_vlv_player) {
             doc.setFont('helvetica', 'bold');
