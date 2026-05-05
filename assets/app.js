@@ -284,6 +284,14 @@ function renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matc
     drawLabelLine(doc, 60, y, 'Beginn', 20, ':');
     drawLabelLineCenteredColon(doc, 95, y, 'Halbzeit', 20);
     drawLabelLineCenteredColon(doc, 135, y, 'Endstand', 25);
+    
+    // Display matchday number (if available)
+    const matchday = data.match?.matchday;
+    if (matchday) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.text(`Spieltag: ${matchday}`, pageWidth - margin, y, { align: 'right' });
+    }
 
     y += 10;
     drawLabelLine(doc, margin, y, 'Heim', 70);
