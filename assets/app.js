@@ -450,7 +450,9 @@ function fillPlayers(doc, x, y, width, headerHeight, rowHeight, rows, players, s
                 ? `ST ${suspension.start_matchday}`
                 : `ST ${suspension.start_matchday}-${suspension.end_matchday}`;
             const suspensionLine1 = `Sperre: ${matchdayRange}`;
-            const suspensionLine2 = `${suspension.reason}`;
+            // Shorten "Spieltag" to "ST" in reason text
+            const reasonText = suspension.reason.replace(/Spieltag/gi, 'ST');
+            const suspensionLine2 = `${reasonText}`;
             doc.text(suspensionLine1, x + numWidth + nameWidth + 1, rowY - 1.5);
             doc.text(suspensionLine2, x + numWidth + nameWidth + 1, rowY + 0.5);
             doc.setFontSize(8);
