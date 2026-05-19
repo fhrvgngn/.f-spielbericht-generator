@@ -93,96 +93,62 @@ function calculateSuspendedPlayers(data) {
         return suspendedPlayers;
     }
 
-    // Get current match date and matchday
-    const currentMatchDate = data.match?.match_date || data.match_date;
+    // Get current matchday
     const currentMatchday = data.match?.matchday;
-    if (!currentMatchDate) {
+    if (!currentMatchday) {
         return suspendedPlayers;
     }
-    
-    const currentDate = new Date(currentMatchDate);
-    
+
     // Process each suspension
     for (const suspension of data.suspensions) {
         // Skip if suspension is not active or missing data
         if (!suspension.is_active || !suspension.team_id || !suspension.player_id) {
             continue;
         }
-        
+
         // Check if suspension is still active based on matches served
         const matchesRemaining = (suspension.matches_suspended || 0) - (suspension.matches_served || 0);
         if (matchesRemaining <= 0) {
             continue;
         }
-        
-        const createdAt = new Date(suspension.created_at);
+
         const teamId = suspension.team_id;
-        
-        // Find the matchday when suspension was created
-        // This is the last matchday before or on the suspension creation date
-        let suspensionMatchday = 0;
-        for (const match of data.all_matches) {
-            if (!match.matchday) continue;
-            const matchDate = new Date(match.match_date);
-            if (matchDate <= createdAt && 
-                (match.home_team_id === teamId || match.away_team_id === teamId)) {
-                suspensionMatchday = Math.max(suspensionMatchday, match.matchday);
-            }
-        }
-        
-        // Find all league matches (matchday != null) for this team after the suspension matchday
-        // Sort by matchday number (not by date!) to handle postponed matches correctly
+        const triggeredMatchId = suspension.triggered_by_match_id;
+
+        // Finde das Match, das die Sperre ausgelöst hat
+        const triggeredMatch = data.all_matches.find(m => m.id === triggeredMatchId);
+        if (!triggeredMatch || !triggeredMatch.matchday) continue;
+        const triggeredMatchday = triggeredMatch.matchday;
+
+        // Finde alle Ligaspiele dieses Teams nach dem Auslöser-Match
         const teamMatches = data.all_matches
             .filter(match => {
-                // Only league matches (matchday exists)
                 if (!match.matchday) return false;
-                
-                // Match involves this team
                 const isTeamMatch = match.home_team_id === teamId || match.away_team_id === teamId;
-                if (!isTeamMatch) return false;
-                
-                // Match is after suspension matchday
-                return match.matchday > suspensionMatchday;
+                return isTeamMatch && match.matchday > triggeredMatchday;
             })
             .sort((a, b) => a.matchday - b.matchday);
-        
-        // Find which suspended match number this current match is
-        // For league matches: match by matchday
-        // For manual mode (Cup/Test/Ersatz): no matchday, so won't match
-        let currentMatchIndex = -1;
-        if (currentMatchday) {
-            currentMatchIndex = teamMatches.findIndex(match => 
-                match.matchday === currentMatchday &&
-                (match.home_team_id === teamId || match.away_team_id === teamId)
-            );
-        }
-        
-        // If current match is found and within suspension period
-        if (currentMatchIndex !== -1) {
-            const matchNumber = currentMatchIndex + 1; // 1-based
-            const startMatch = (suspension.matches_served || 0) + 1;
-            const endMatch = suspension.matches_suspended || 0;
-            
-            // Player is suspended if this match falls within the suspension range
-            if (matchNumber >= startMatch && matchNumber <= endMatch) {
-                // Calculate matchday range for suspension display
-                const startMatchdayIndex = startMatch - 1; // 0-based index
-                const endMatchdayIndex = endMatch - 1; // 0-based index
-                const startMatchday = teamMatches[startMatchdayIndex]?.matchday || 0;
-                const endMatchday = teamMatches[endMatchdayIndex]?.matchday || 0;
-                
-                suspendedPlayers.set(suspension.player_id, {
-                    reason: suspension.reason || 'Keine Angabe',
-                    matches_suspended: suspension.matches_suspended || 0,
-                    matches_remaining: matchesRemaining,
-                    current_match_number: matchNumber,
-                    start_matchday: startMatchday,
-                    end_matchday: endMatchday,
-                });
-            }
+
+        // Die nächsten N Ligaspiele sind gesperrt
+        const suspendedMatches = teamMatches.slice(0, suspension.matches_suspended || 0);
+        const suspendedMatchdays = suspendedMatches.map(m => m.matchday);
+
+        // Ist das aktuelle Match einer der gesperrten Spieltage?
+        if (suspendedMatchdays.includes(currentMatchday)) {
+            // Für die Anzeige: Start- und Endspieltag der Sperre
+            const start_matchday = suspendedMatchdays[0] || 0;
+            const end_matchday = suspendedMatchdays[suspendedMatchdays.length - 1] || 0;
+            suspendedPlayers.set(suspension.player_id, {
+                reason: suspension.reason || 'Keine Angabe',
+                matches_suspended: suspension.matches_suspended || 0,
+                matches_remaining: matchesRemaining,
+                current_match_number: suspendedMatchdays.indexOf(currentMatchday) + 1,
+                start_matchday,
+                end_matchday,
+            });
         }
     }
-    
+
     return suspendedPlayers;
 }
 
