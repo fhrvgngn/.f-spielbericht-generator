@@ -11,6 +11,7 @@ $teams = [];
 $matches = [];
 $teamMap = [];
 $latestSuspensionDate = null;
+$suspendedPlayerLabels = [];
 
 try {
     $seasons = supabase_get('seasons', [
@@ -65,6 +66,109 @@ try {
             ]);
             if (!empty($suspensions) && isset($suspensions[0]['created_at'])) {
                 $latestSuspensionDate = $suspensions[0]['created_at'];
+            }
+        } catch (Throwable $e) {
+            // Silently ignore suspension fetch errors
+        }
+
+        // Fetch currently suspended players for display
+        try {
+            $activeSuspensions = supabase_get('suspensions', [
+                'season_id' => 'eq.' . $season['id'],
+                'is_active' => 'eq.true',
+                'order' => 'created_at.desc',
+            ]);
+
+            $playerIds = [];
+            $teamIds = [];
+
+            foreach ($activeSuspensions as $suspension) {
+                $playerId = $suspension['player_id'] ?? '';
+                $teamId = $suspension['team_id'] ?? '';
+                if ($playerId !== '') {
+                    $playerIds[$playerId] = true;
+                }
+                if ($teamId !== '') {
+                    $teamIds[$teamId] = true;
+                }
+            }
+
+            $playersById = [];
+            if (!empty($playerIds)) {
+                $playerIdList = implode(',', array_keys($playerIds));
+                $players = supabase_get('players', [
+                    'id' => 'in.(' . $playerIdList . ')',
+                ]);
+                foreach ($players as $player) {
+                    if (isset($player['id'])) {
+                        $playersById[$player['id']] = $player;
+                        if (!empty($player['team_id'])) {
+                            $teamIds[$player['team_id']] = true;
+                        }
+                    }
+                }
+            }
+
+            $teamsById = $teamMap;
+            if (!empty($teamIds)) {
+                $teamIdList = implode(',', array_keys($teamIds));
+                $extraTeams = supabase_get('teams', [
+                    'id' => 'in.(' . $teamIdList . ')',
+                ]);
+                foreach ($extraTeams as $team) {
+                    if (isset($team['id'], $team['name'])) {
+                        $teamsById[$team['id']] = [
+                            'name' => $team['name'],
+                            'short_name' => $team['short_name'] ?? '',
+                        ];
+                    }
+                }
+            }
+
+            $seenPlayers = [];
+            foreach ($activeSuspensions as $suspension) {
+                $matchesSuspended = (int) ($suspension['matches_suspended'] ?? 0);
+                $matchesServed = (int) ($suspension['matches_served'] ?? 0);
+                if ($matchesSuspended > 0 && $matchesServed >= $matchesSuspended) {
+                    continue;
+                }
+
+                $playerId = $suspension['player_id'] ?? '';
+                if ($playerId === '' || isset($seenPlayers[$playerId])) {
+                    continue;
+                }
+                $seenPlayers[$playerId] = true;
+
+                $player = $playersById[$playerId] ?? null;
+                $firstName = is_array($player) ? ($player['first_name'] ?? '') : '';
+                $lastName = is_array($player) ? ($player['last_name'] ?? '') : '';
+                $fullName = trim($firstName . ' ' . $lastName);
+                if ($fullName === '') {
+                    $fullName = $playerId;
+                }
+
+                $teamId = $suspension['team_id'] ?? ($player['team_id'] ?? '');
+                $shortName = '';
+                if ($teamId !== '') {
+                    $teamEntry = $teamsById[$teamId] ?? null;
+                    if (is_array($teamEntry)) {
+                        $shortName = $teamEntry['short_name'] ?? '';
+                        if ($shortName === '' && isset($teamEntry['name'])) {
+                            $shortName = $teamEntry['name'];
+                        }
+                    }
+                }
+
+                if ($shortName !== '') {
+                    $suspendedPlayerLabels[] = $fullName . ' (' . $shortName . ')';
+                } else {
+                    $suspendedPlayerLabels[] = $fullName;
+                }
+            }
+
+            if (!empty($suspendedPlayerLabels)) {
+                natcasesort($suspendedPlayerLabels);
+                $suspendedPlayerLabels = array_values($suspendedPlayerLabels);
             }
         } catch (Throwable $e) {
             // Silently ignore suspension fetch errors
@@ -288,6 +392,11 @@ $refereeFee = DEFAULT_REFEREE_FEE;
                     <input type="checkbox" id="suspensions-toggle" style="cursor: pointer;">
                     <span>Sperren berücksichtigen (Experimentell)</span>
                 </label>
+                <?php if (!empty($suspendedPlayerLabels)) : ?>
+                    <div style="margin-top: 6px; font-size: 0.8em; opacity: 0.85;">
+                        Aktuell gesperrt: <?php echo h(implode(', ', $suspendedPlayerLabels)); ?>
+                    </div>
+                <?php endif; ?>
                 <?php if ($latestSuspensionDate) : ?>
                     <?php
                         try {
