@@ -84,7 +84,6 @@ try {
         // Fetch all active suspensions for this season
         $suspensions = supabase_get('suspensions', [
             'season_id' => 'eq.' . $effectiveSeasonId,
-            'is_active' => 'eq.true',
         ]);
 
         // Fetch all matches of this season for suspension calculation

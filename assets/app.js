@@ -101,14 +101,13 @@ function calculateSuspendedPlayers(data) {
 
     // Process each suspension
     for (const suspension of data.suspensions) {
-        // Skip if suspension is not active or missing data
-        if (!suspension.is_active || !suspension.team_id || !suspension.player_id) {
+        // Skip if suspension is missing data
+        if (!suspension.team_id || !suspension.player_id) {
             continue;
         }
 
-        // Check if suspension is still active based on matches served
-        const matchesRemaining = (suspension.matches_suspended || 0) - (suspension.matches_served || 0);
-        if (matchesRemaining <= 0) {
+        const matchesSuspended = suspension.matches_suspended || 0;
+        if (matchesSuspended <= 0) {
             continue;
         }
 
@@ -130,7 +129,7 @@ function calculateSuspendedPlayers(data) {
             .sort((a, b) => a.matchday - b.matchday);
 
         // Die nächsten N Ligaspiele sind gesperrt
-        const suspendedMatches = teamMatches.slice(0, suspension.matches_suspended || 0);
+        const suspendedMatches = teamMatches.slice(0, matchesSuspended);
         const suspendedMatchdays = suspendedMatches.map(m => m.matchday);
 
         // Ist das aktuelle Match einer der gesperrten Spieltage?
@@ -140,8 +139,7 @@ function calculateSuspendedPlayers(data) {
             const end_matchday = suspendedMatchdays[suspendedMatchdays.length - 1] || 0;
             suspendedPlayers.set(suspension.player_id, {
                 reason: suspension.reason || 'Keine Angabe',
-                matches_suspended: suspension.matches_suspended || 0,
-                matches_remaining: matchesRemaining,
+                matches_suspended: matchesSuspended,
                 current_match_number: suspendedMatchdays.indexOf(currentMatchday) + 1,
                 start_matchday,
                 end_matchday,
