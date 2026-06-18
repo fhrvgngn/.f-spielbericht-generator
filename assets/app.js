@@ -179,11 +179,12 @@ export function buildPdf(data, seasonLabel, matchType = null, refereeFee = null)
     
     const homePlayers = sortPlayers(homePlayersNormalized);
     const awayPlayers = sortPlayers(awayPlayersNormalized);
+    const creationStamp = buildCreationStamp();
 
     // Calculate suspended players (experimental feature)
     const suspendedPlayers = calculateSuspendedPlayers(data);
 
-    renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType, suspendedPlayers, finalRefereeFee);
+    renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType, suspendedPlayers, finalRefereeFee, creationStamp);
 
     return doc;
 }
@@ -194,6 +195,14 @@ function normalizePlayerNames(players) {
         first_name: String(player?.first_name || '').trim(),
         last_name: String(player?.last_name || '').trim(),
     }));
+}
+
+function buildCreationStamp(date = new Date()) {
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
+    return `${hour}${minute}${day}${month}`;
 }
 
 function sortPlayers(players) {
@@ -243,7 +252,7 @@ function sanitizeSegment(value) {
         .replace(/-+/g, '-');
 }
 
-function renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType = null, suspendedPlayers = null, refereeFee = defaultRefereeFee) {
+function renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType = null, suspendedPlayers = null, refereeFee = defaultRefereeFee, creationStamp = '') {
     const pageWidth = 210;
     const pageHeight = 297;
     const margin = 12;
@@ -256,7 +265,9 @@ function renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matc
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.text('https://tschuta.at/tools/sbg/', pageWidth - margin, y, { align: 'right' });
+    doc.text('https://tschuta.at/tools/sbg/', pageWidth - margin, y - 1.5, { align: 'right' });
+    doc.setFontSize(5);
+    doc.text(creationStamp, pageWidth - margin, y + 1.3, { align: 'right' });
 
     y += 8;
     drawLabelLine(doc, margin, y, 'Datum', 30, ':');
