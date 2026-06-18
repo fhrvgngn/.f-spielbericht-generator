@@ -174,9 +174,11 @@ export function buildPdf(data, seasonLabel, matchType = null, refereeFee = null)
     const awayPlayersRaw = Array.isArray(data.players?.away) ? data.players.away : [];
     const homePlayersFixed = applySeasonFixes(homePlayersRaw, data.teams?.home?.id || '', seasonId);
     const awayPlayersFixed = applySeasonFixes(awayPlayersRaw, data.teams?.away?.id || '', seasonId);
+    const homePlayersNormalized = normalizePlayerNames(homePlayersFixed);
+    const awayPlayersNormalized = normalizePlayerNames(awayPlayersFixed);
     
-    const homePlayers = sortPlayers(homePlayersFixed);
-    const awayPlayers = sortPlayers(awayPlayersFixed);
+    const homePlayers = sortPlayers(homePlayersNormalized);
+    const awayPlayers = sortPlayers(awayPlayersNormalized);
 
     // Calculate suspended players (experimental feature)
     const suspendedPlayers = calculateSuspendedPlayers(data);
@@ -184,6 +186,14 @@ export function buildPdf(data, seasonLabel, matchType = null, refereeFee = null)
     renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType, suspendedPlayers, finalRefereeFee);
 
     return doc;
+}
+
+function normalizePlayerNames(players) {
+    return (Array.isArray(players) ? players : []).map((player) => ({
+        ...player,
+        first_name: String(player?.first_name || '').trim(),
+        last_name: String(player?.last_name || '').trim(),
+    }));
 }
 
 function sortPlayers(players) {
