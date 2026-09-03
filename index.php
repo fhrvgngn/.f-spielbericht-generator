@@ -394,7 +394,7 @@ $refereeFee = DEFAULT_REFEREE_FEE;
                 </label>
                 <?php if (!empty($suspendedPlayerLabels)) : ?>
                     <div style="margin-top: 6px; font-size: 0.8em; opacity: 0.85;">
-                        Aktuell gesperrt: <?php echo h(implode(', ', $suspendedPlayerLabels)); ?>
+                        Aktuell als gesperrt eingetragen: <?php echo h(implode(', ', $suspendedPlayerLabels)); ?>
                     </div>
                 <?php endif; ?>
                 <?php if ($latestSuspensionDate) : ?>
