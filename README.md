@@ -14,6 +14,8 @@ Client-seitiger PDF-Generator für die Hobbyliga Vorderland. Die Seite lädt Spi
 - Filter nach Heimmannschaft und Spieltag
 - Mobile-optimierte Tabellenansicht (Kurzform mit "PDF"-Button)
 - PDF-Erstellung direkt im Browser (kein Server-Rendering)
+- Lädt bestätigte Tore und Karten pro bestehendem Spiel aus Supabase
+- Übernimmt bei Matches mit `status = "confirmed"` den gespeicherten Endstand und den aus den Toren berechneten Halbzeitstand in den Spielbericht
 - Dateinamen nach Schema: `<matchday>_<home>-<away>-<YYYY-MM-DD>.pdf`
 - VFV-Markierung für Spieler (kleines "VFV" im Namensfeld)
 - **Manuelle Vorlage:** Erstelle PDFs für Cup- oder Testspiele ohne existierende Match-Daten
@@ -45,7 +47,7 @@ Der Wert wird im generierten PDF unter "Gebühr erhalten" angezeigt. Für zukün
 
 - index.php: Hauptseite und Filter-UI
 - manual.php: Formularseite für manuelle PDF-Vorlagen (Cup/Testspiele)
-- api.php: JSON-Endpoint für Match/Team/Player-Daten (unterstützt Match-ID oder Team-IDs)
+- api.php: JSON-Endpoint für Match/Team/Player-Daten sowie bestätigte Tore und Karten (unterstützt Match-ID oder Team-IDs)
 - lib/supabase.php: Supabase-Client inkl. Cache
 - assets/app.js: PDF-Erstellung und UI-Interaktionen
 - assets/manual-form.js: Formular-Logik für manuelle Vorlagen

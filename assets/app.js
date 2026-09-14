@@ -180,13 +180,38 @@ export function buildPdf(data, seasonLabel, matchType = null, refereeFee = null)
     const homePlayers = sortPlayers(homePlayersNormalized);
     const awayPlayers = sortPlayers(awayPlayersNormalized);
     const creationStamp = buildCreationStamp();
+    const goalsByPlayer = groupGoalsByPlayer(data.goals);
+    const cards = Array.isArray(data.cards) ? data.cards : [];
 
     // Calculate suspended players (experimental feature)
     const suspendedPlayers = calculateSuspendedPlayers(data);
 
-    renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType, suspendedPlayers, finalRefereeFee, creationStamp);
+    renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType, suspendedPlayers, finalRefereeFee, creationStamp, goalsByPlayer, cards);
 
     return doc;
+}
+
+function groupGoalsByPlayer(goals) {
+    const goalsByPlayer = new Map();
+
+    for (const goal of Array.isArray(goals) ? goals : []) {
+        if (!goal?.player_id) {
+            continue;
+        }
+
+        const playerGoals = goalsByPlayer.get(goal.player_id) || { count: 0, minutes: [] };
+        playerGoals.count += 1;
+        const isOwnGoal = goal.is_own_goal === true || goal.is_own_goal === 1 || goal.is_own_goal === 'true';
+        const ownGoalSuffix = isOwnGoal ? ' ET' : '';
+        if (goal.minute !== null && goal.minute !== undefined && goal.minute !== '') {
+            playerGoals.minutes.push(`${goal.minute}${ownGoalSuffix}`);
+        } else if (isOwnGoal) {
+            playerGoals.minutes.push('ET');
+        }
+        goalsByPlayer.set(goal.player_id, playerGoals);
+    }
+
+    return goalsByPlayer;
 }
 
 function normalizePlayerNames(players) {
@@ -252,7 +277,7 @@ function sanitizeSegment(value) {
         .replace(/-+/g, '-');
 }
 
-function renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType = null, suspendedPlayers = null, refereeFee = defaultRefereeFee, creationStamp = '') {
+function renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matchType = null, suspendedPlayers = null, refereeFee = defaultRefereeFee, creationStamp = '', goalsByPlayer = new Map(), cards = []) {
     const pageWidth = 210;
     const pageHeight = 297;
     const margin = 12;
@@ -307,8 +332,8 @@ function renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matc
     drawPlayerTable(doc, leftX, tableTop, tableWidth, headerHeight, rowHeight, rows, 'Nummer', 'Name', 'Tore');
     drawPlayerTable(doc, rightX, tableTop, tableWidth, headerHeight, rowHeight, rows, 'Nummer', 'Name', 'Tore');
 
-    fillPlayers(doc, leftX, tableTop, tableWidth, headerHeight, rowHeight, rows, homePlayers, suspendedPlayers);
-    fillPlayers(doc, rightX, tableTop, tableWidth, headerHeight, rowHeight, rows, awayPlayers, suspendedPlayers);
+    fillPlayers(doc, leftX, tableTop, tableWidth, headerHeight, rowHeight, rows, homePlayers, suspendedPlayers, goalsByPlayer);
+    fillPlayers(doc, rightX, tableTop, tableWidth, headerHeight, rowHeight, rows, awayPlayers, suspendedPlayers, goalsByPlayer);
 
     doc.rect(leftX, signatureTop, tableWidth, signatureHeight);
     doc.rect(rightX, signatureTop, tableWidth, signatureHeight);
@@ -323,6 +348,8 @@ function renderPage(doc, data, seasonLabel, homePlayers, awayPlayers, rows, matc
 
     drawCardTable(doc, leftX, cardsTop, tableWidth, cardTableHeight);
     drawCardTable(doc, rightX, cardsTop, tableWidth, cardTableHeight);
+    fillCardTable(doc, leftX, cardsTop, tableWidth, cardTableHeight, cards, data.teams?.home?.id || '', homePlayers);
+    fillCardTable(doc, rightX, cardsTop, tableWidth, cardTableHeight, cards, data.teams?.away?.id || '', awayPlayers);
 
     doc.setFontSize(8);
     doc.text(`Gebühr erhalten: ${refereeFee.toFixed(0)},- EUR`, leftX, footerY);
@@ -337,12 +364,118 @@ function fillHeaderValues(doc, data) {
     const match = data.match || {};
     const teams = data.teams || {};
     const dateInfo = formatMatchDate(match.match_date || '');
+    const scores = calculateMatchScores(data);
 
     doc.setFontSize(9);
     doc.text(dateInfo.date || '', 28, 20.2);
     doc.text(dateInfo.time || '', 78, 20.2);
     doc.text(teams.home?.name || '', 24, 30.2);
     doc.text(teams.away?.name || '', 125, 30.2);
+
+    const halfTimeColonX = getScoreColonX(doc, 95, 'Halbzeit', 20);
+    const fullTimeColonX = getScoreColonX(doc, 135, 'Endstand', 25);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    drawScoreAroundColon(doc, scores.halfTime, halfTimeColonX, 20.2);
+    drawScoreAroundColon(doc, scores.fullTime, fullTimeColonX, 20.2);
+    doc.setFont('helvetica', 'normal');
+}
+
+function getScoreColonX(doc, x, label, lineWidth) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    return x + doc.getTextWidth(label) + 1 + lineWidth / 2;
+}
+
+function drawScoreAroundColon(doc, score, colonX, y) {
+    if (!score) {
+        return;
+    }
+
+    const [homeScore, awayScore] = score.split(':').map((value) => value.trim());
+    doc.text(homeScore, colonX - 2, y, { align: 'right' });
+    doc.text(awayScore, colonX + 2, y);
+}
+
+function calculateMatchScores(data) {
+    const hasConfirmedPlayedMatch = isConfirmedPlayedMatch(data.match);
+    const match = data.match || {};
+    const homeTeamId = data.teams?.home?.id || '';
+    const awayTeamId = data.teams?.away?.id || '';
+    const goals = Array.isArray(data.goals) ? data.goals : [];
+    const halfTime = { home: 0, away: 0 };
+    let hasInvalidGoalMinute = false;
+
+    for (const goal of goals) {
+        const minute = Number.parseInt(String(goal?.minute ?? ''), 10);
+        if (!Number.isFinite(minute) || minute <= 0 || minute > 130) {
+            hasInvalidGoalMinute = true;
+            continue;
+        }
+        if (minute > 45) {
+            continue;
+        }
+
+        const isOwnGoal = goal.is_own_goal === true
+            || goal.is_own_goal === 1
+            || goal.is_own_goal === '1'
+            || goal.is_own_goal === 'true';
+        const scoringTeamId = isOwnGoal
+            ? (goal.team_id === homeTeamId ? awayTeamId : homeTeamId)
+            : goal.team_id;
+
+        if (scoringTeamId === homeTeamId) {
+            halfTime.home += 1;
+        } else if (scoringTeamId === awayTeamId) {
+            halfTime.away += 1;
+        }
+    }
+
+    return {
+        halfTime: hasConfirmedPlayedMatch && !hasInvalidGoalMinute ? `${halfTime.home} : ${halfTime.away}` : '',
+        fullTime: hasConfirmedPlayedMatch ? readMatchScore(match, [
+            ['home_score', 'away_score'],
+            ['full_time_home_score', 'full_time_away_score'],
+            ['fulltime_home_score', 'fulltime_away_score'],
+            ['final_home_score', 'final_away_score'],
+            ['score'],
+            ['result'],
+        ]) : '',
+    };
+}
+
+function readMatchScore(match, fieldPairs) {
+    for (const fields of fieldPairs) {
+        if (fields.length === 1) {
+            const score = match[fields[0]];
+            if (typeof score === 'string' && /^\s*\d+\s*:\s*\d+\s*$/.test(score)) {
+                return score.trim().replace(/\s*:\s*/, ' : ');
+            }
+            continue;
+        }
+
+        const homeScore = match[fields[0]];
+        const awayScore = match[fields[1]];
+        if (isScoreValue(homeScore) && isScoreValue(awayScore)) {
+            return `${homeScore} : ${awayScore}`;
+        }
+    }
+
+    return '';
+}
+
+function isScoreValue(value) {
+    return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
+}
+
+function isConfirmedPlayedMatch(match) {
+    if (!match?.id) {
+        return false;
+    }
+
+    const isConfirmed = String(match.status || '').toLowerCase() === 'confirmed';
+
+    return isConfirmed;
 }
 
 function formatMatchDate(dateString) {
@@ -408,7 +541,7 @@ function drawPlayerTable(doc, x, y, width, headerHeight, rowHeight, rows, number
     }
 }
 
-function fillPlayers(doc, x, y, width, headerHeight, rowHeight, rows, players, suspendedPlayers = null) {
+function fillPlayers(doc, x, y, width, headerHeight, rowHeight, rows, players, suspendedPlayers = null, goalsByPlayer = new Map()) {
     const numWidth = 16;
     const goalsWidth = 26;
     const nameWidth = width - numWidth - goalsWidth;
@@ -423,6 +556,14 @@ function fillPlayers(doc, x, y, width, headerHeight, rowHeight, rows, players, s
         const name = `${player.last_name || ''} ${player.first_name || ''}`.trim();
 
         doc.text(name, x + numWidth + 2, rowY);
+
+        const playerGoals = goalsByPlayer.get(player.id);
+        if (playerGoals) {
+            doc.setFontSize(6);
+            doc.text(String(playerGoals.count), x + numWidth + nameWidth + 2, rowY);
+            doc.text(playerGoals.minutes.join(', '), x + width - 1.5, rowY, { align: 'right' });
+            doc.setFontSize(8);
+        }
 
         // Check if player is suspended
         const suspension = suspendedPlayers?.get(player.id);
@@ -480,5 +621,35 @@ function drawCardTable(doc, x, y, width, height) {
     doc.text('Minute', x + 28.5, y + 7.5);
     doc.text('Minute', x + 43.5, y + 7.5);
     doc.line(x, y + 8.5, x + width, y + 8.5);
+}
+
+function fillCardTable(doc, x, y, width, height, cards, teamId, players) {
+    const playerMap = new Map((Array.isArray(players) ? players : []).map((player) => [player.id, player]));
+    const teamCards = (Array.isArray(cards) ? cards : []).filter((card) => card.team_id === teamId).slice(0, 4);
+    const rowHeight = (height - 8.5) / 4;
+    const cardColumns = {
+        yellow: x + 19,
+        yellowRed: x + 33,
+        red: x + 47,
+    };
+
+    doc.setFontSize(6);
+    teamCards.forEach((card, index) => {
+        const rowY = y + 8.5 + rowHeight * index + rowHeight * 0.7;
+        const player = playerMap.get(card.player_id);
+        const playerName = player ? `${player.last_name || ''} ${player.first_name || ''}`.trim() : '';
+        const cardType = String(card.card_type || '').toLowerCase().replace(/[-_ ]/g, '');
+        const minute = card.minute === null || card.minute === undefined ? '' : String(card.minute);
+
+        if (cardType === 'yellow' || cardType === 'gelb') {
+            doc.text(minute, cardColumns.yellow, rowY, { align: 'center' });
+        } else if (cardType === 'yellowred' || cardType === 'gelbrot' || cardType === 'secondyellow') {
+            doc.text(minute, cardColumns.yellowRed, rowY, { align: 'center' });
+        } else if (cardType === 'red' || cardType === 'rot') {
+            doc.text(minute, cardColumns.red, rowY, { align: 'center' });
+        }
+
+        doc.text(playerName, x + 58, rowY);
+    });
 }
 

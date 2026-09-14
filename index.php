@@ -390,7 +390,7 @@ $refereeFee = DEFAULT_REFEREE_FEE;
             <div style="margin-top: 12px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.1);">
                 <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9em; user-select: none;">
                     <input type="checkbox" id="suspensions-toggle" style="cursor: pointer;">
-                    <span>Sperren berücksichtigen (Experimentell)</span>
+                    <span>Sperren berücksichtigen</span>
                 </label>
                 <?php if (!empty($suspendedPlayerLabels)) : ?>
                     <div style="margin-top: 6px; font-size: 0.8em; opacity: 0.85;">
@@ -574,6 +574,6 @@ $refereeFee = DEFAULT_REFEREE_FEE;
         </footer>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-    <script type="module" src="assets/app.js"></script>
+    <script type="module" src="assets/app.js?v=20260914-13"></script>
 </body>
 </html>

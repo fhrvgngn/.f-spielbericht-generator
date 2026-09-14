@@ -68,6 +68,23 @@ try {
         'order' => 'last_name.asc,first_name.asc',
     ]);
 
+    $goals = [];
+    $cards = [];
+    if ($match !== null) {
+        $goals = supabase_get('goals', [
+            'select' => 'id,team_id,minute,is_own_goal,player_id',
+            'match_id' => 'eq.' . $matchId,
+            'status' => 'eq.confirmed',
+            'order' => 'minute.asc.nullslast',
+        ]);
+        $cards = supabase_get('cards', [
+            'select' => 'id,team_id,minute,card_type,player_id',
+            'match_id' => 'eq.' . $matchId,
+            'status' => 'eq.confirmed',
+            'order' => 'minute.asc.nullslast',
+        ]);
+    }
+
     // Fetch suspensions if requested (experimental feature)
     $suspensions = [];
     $allMatches = [];
@@ -117,6 +134,8 @@ try {
     // Include match data only in match mode
     if ($match !== null) {
         $response['match'] = $match;
+        $response['goals'] = $goals;
+        $response['cards'] = $cards;
     }
 
     // Include match_date for manual mode (used for suspension calculation)
