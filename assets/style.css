@@ -63,6 +63,21 @@ body {
     color: var(--accent);
 }
 
+.season-status {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 3px 9px;
+    border: 1px solid #b91c1c;
+    border-radius: 999px;
+    color: #991b1b;
+    background: #fee2e2;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    vertical-align: middle;
+    text-transform: lowercase;
+}
+
 .panel {
     background: var(--panel);
     border-radius: 16px;

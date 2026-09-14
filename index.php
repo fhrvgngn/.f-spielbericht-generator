@@ -179,6 +179,21 @@ try {
 }
 
 $allMatches = $matches;
+$seasonEnded = !empty($allMatches);
+foreach ($allMatches as $match) {
+    if (empty($match['match_date'])) {
+        $seasonEnded = false;
+        break;
+    }
+
+    try {
+        $seasonEnded = $seasonEnded && new DateTime($match['match_date']) < new DateTime();
+    } catch (Throwable $e) {
+        $seasonEnded = false;
+        break;
+    }
+}
+
 $matchdays = [];
 foreach ($allMatches as $match) {
     if (isset($match['matchday'])) {
@@ -383,7 +398,12 @@ $refereeFee = DEFAULT_REFEREE_FEE;
             <div class="hero-header">
                 <div>
                     <h1>Spielbericht <span class="hero-accent">Generator</span></h1>
-                    <p>Hobbyliga Vorderland - <?php echo h($seasonName); ?></p>
+                    <p>
+                        Hobbyliga Vorderland - <?php echo h($seasonName); ?>
+                        <?php if ($seasonEnded) : ?>
+                            <span class="season-status">beendet</span>
+                        <?php endif; ?>
+                    </p>
                 </div>
                 <a href="manual.php" class="btn-secondary">Manuelle Vorlage</a>
             </div>
