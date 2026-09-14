@@ -625,17 +625,21 @@ function drawCardTable(doc, x, y, width, height) {
 
 function fillCardTable(doc, x, y, width, height, cards, teamId, players) {
     const playerMap = new Map((Array.isArray(players) ? players : []).map((player) => [player.id, player]));
-    const teamCards = (Array.isArray(cards) ? cards : []).filter((card) => card.team_id === teamId).slice(0, 4);
-    const rowHeight = (height - 8.5) / 4;
+    const teamCards = (Array.isArray(cards) ? cards : [])
+        .filter((card) => card.team_id === teamId)
+        .slice(0, 6);
+    const rowHeight = teamCards.length > 0
+        ? (height - 8.5) / 6
+        : 0;
     const cardColumns = {
         yellow: x + 19,
         yellowRed: x + 33,
         red: x + 47,
     };
 
-    doc.setFontSize(6);
+    doc.setFontSize(Math.max(5, Math.min(6, rowHeight * 1.6)));
     teamCards.forEach((card, index) => {
-        const rowY = y + 8.5 + rowHeight * index + rowHeight * 0.7;
+        const rowY = y + 8.5 + rowHeight * index + rowHeight * 0.65;
         const player = playerMap.get(card.player_id);
         const playerName = player ? `${player.last_name || ''} ${player.first_name || ''}`.trim() : '';
         const cardType = String(card.card_type || '').toLowerCase().replace(/[-_ ]/g, '');

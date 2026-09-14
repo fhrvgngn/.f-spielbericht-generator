@@ -574,6 +574,6 @@ $refereeFee = DEFAULT_REFEREE_FEE;
         </footer>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-    <script type="module" src="assets/app.js?v=20260914-13"></script>
+    <script type="module" src="assets/app.js?v=20260914-16"></script>
 </body>
 </html>
