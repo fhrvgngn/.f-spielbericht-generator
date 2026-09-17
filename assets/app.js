@@ -636,14 +636,16 @@ function fillCardTable(doc, x, y, width, height, cards, teamId, players) {
         const player = playerMap.get(card.player_id);
         const playerName = player ? `${player.last_name || ''} ${player.first_name || ''}`.trim() : '';
         const cardType = String(card.card_type || '').toLowerCase().replace(/[-_ ]/g, '');
-        const minute = card.minute === null || card.minute === undefined ? '' : String(card.minute);
+        const minuteValue = card.minute === null || card.minute === undefined || String(card.minute).trim() === ''
+            ? 'X'
+            : String(card.minute);
 
         if (cardType === 'yellow' || cardType === 'gelb') {
-            doc.text(minute, cardColumns.yellow, rowY, { align: 'center' });
+            doc.text(minuteValue, cardColumns.yellow, rowY, { align: 'center' });
         } else if (cardType === 'yellowred' || cardType === 'gelbrot' || cardType === 'secondyellow') {
-            doc.text(minute, cardColumns.yellowRed, rowY, { align: 'center' });
+            doc.text(minuteValue, cardColumns.yellowRed, rowY, { align: 'center' });
         } else if (cardType === 'red' || cardType === 'rot') {
-            doc.text(minute, cardColumns.red, rowY, { align: 'center' });
+            doc.text(minuteValue, cardColumns.red, rowY, { align: 'center' });
         }
 
         doc.text(playerName, x + 58, rowY);
