@@ -1,5 +1,3 @@
-import { applySeasonFixes } from './season-2026-fixes.js'; // TODO: Remove after 2026 season
-
 const { jsPDF } = window.jspdf || {};
 if (!jsPDF) {
     console.error('jsPDF library not loaded');
@@ -167,16 +165,11 @@ export function buildPdf(data, seasonLabel, matchType = null, refereeFee = null)
     });
 
     const rows = 30;
-    const seasonId = data.match?.season_id || '';
-    
-    // Apply season-specific fixes (e.g., FC Viktorsberg 2026 name swap)
+
     const homePlayersRaw = Array.isArray(data.players?.home) ? data.players.home : [];
     const awayPlayersRaw = Array.isArray(data.players?.away) ? data.players.away : [];
-    const homePlayersFixed = applySeasonFixes(homePlayersRaw, data.teams?.home?.id || '', seasonId);
-    const awayPlayersFixed = applySeasonFixes(awayPlayersRaw, data.teams?.away?.id || '', seasonId);
-    const homePlayersNormalized = normalizePlayerNames(homePlayersFixed);
-    const awayPlayersNormalized = normalizePlayerNames(awayPlayersFixed);
-    
+    const homePlayersNormalized = normalizePlayerNames(homePlayersRaw);
+    const awayPlayersNormalized = normalizePlayerNames(awayPlayersRaw);
     const homePlayers = sortPlayers(homePlayersNormalized);
     const awayPlayers = sortPlayers(awayPlayersNormalized);
     const creationStamp = buildCreationStamp();
